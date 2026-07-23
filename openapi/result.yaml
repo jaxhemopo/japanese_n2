@@ -1,0 +1,348 @@
+openapi: 3.0.4
+info:
+  title: N2 Daily Mock Exam — Result Page
+  version: 0.1.0
+  description: |
+    HTTP contract for the `/result/[date]` page in the N2 Daily Mock Exam
+    webapp (Next.js App Router, Server Component). This spec is the
+    canonical, machine-readable description of the request/response shape
+    that `app/result/[date]/page.tsx` implements and that browsers + crawlers
+    observe.
+
+    Authentication: cookie-based Supabase session. The page calls
+    `createServerSupabase().auth.getSession()` server-side; an absent or
+    expired session causes a server-side redirect to `/auth` (HTTP 302).
+    There is no JSON API path for this page — the response is always HTML.
+
+    Status-code semantics:
+      * 200 — page rendered (any of the 5 content states below).
+      * 302 — auth redirect to `/auth` (no session or expired session).
+      * 4xx/5xx — not produced by this page; Next.js default error page
+        if the Server Component throws uncaught.
+
+    Content states (all return 200 with different HTML bodies):
+      * ErrorState — invalid date format (date param fails ^\d{4}-\d{2}-\d{2}$).
+      * NoMockForDate — valid date, no n2_mocks row for that date.
+      * NoAttemptYet — mock exists for date, user has not submitted answers.
+      * Breakdown — mock exists + user has submitted answers; score header +
+        per-question correct/incorrect + explanations rendered.
+      * MissingQuestionRow — per-row soft-fail; attempt row exists but the
+        corresponding n2_questions JOIN missed (orphan question_id).
+
+    The page fetches attempt data from GET /api/attempts/{date} (documented in
+    openapi/attempts.yaml). It re-exports that data as HTML.
+
+  contact:
+    name: n2-build loop
+    url: ~/ODIS/shared/loops/n2-build/
+servers:
+  - url: http://localhost:3000
+    description: Local Next.js dev server
+  - url: https://n2.example.com
+    description: Production (placeholder — replace with deployed origin)
+
+tags:
+  - name: result
+    description: |
+      Per-date result page. GET /result/[date] renders the subscriber's
+      attempt breakdown for the specified date. Auth-gated; redirects to
+      /auth if no session. Consumes GET /api/attempts/{date} internally
+      (openapi/attempts.yaml).
+
+paths:
+  /result/{date}:
+    get:
+      tags: [result]
+      operationId: getResultPage
+      summary: Render the attempt result page for a given date
+      description: |
+        Server Component page route. Auth-gated. Renders:
+        - Score header (correct/total, pct color-coded, total time).
+        - Per-question breakdown: prompt, user's answer, correct answer
+          (if incorrect), per-question time, collapsible explanation.
+        - Footer with back-nav links to "/" and "/today".
+
+        Response is always text/html. No JSON.
+      parameters:
+        - name: date
+          in: path
+          required: true
+          description: |
+            Target date in YYYY-MM-DD format. Examples: 2026-07-13, 2026-01-01.
+            Must match ^\d{4}-\d{2}-\d{2}$ — invalid format renders ErrorState
+            (HTTP 200, not 400 — Next.js handles invalid param gracefully).
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+            example: "2026-07-13"
+      responses:
+        '200':
+          description: |
+            Page rendered (any of 5 content states below). Content is
+            browser-ready HTML; no JSON alternative.
+          content:
+            text/html:
+              schema:
+                type: string
+                description: Full HTML page (Next.js React Server Component output).
+              examples:
+                breakdown:
+                  summary: Breakdown view — mock exists + attempt submitted
+                  value: |
+                    <!DOCTYPE html>
+                    <html><head>...</head><body>
+                      <main>
+                        <header>
+                          <h1>2026-07-13 の結果</h1>
+                          <div><!-- score: 4 / 5, 正答率 80%, 所要時間 4分05秒 --></div>
+                        </header>
+                        <ol>
+                          <li><!-- 問 1: 正解,  prompt, user answer, time, explanation --></li>
+                          <li><!-- 問 2: 不正解, prompt, user answer,  正解 b, time, explanation --></li>
+                          <!-- ... -->
+                        </ol>
+                        <footer>
+                          <a href="/">← ホームに戻る</a>
+                          <a href="/today">今日のモックへ →</a>
+                        </footer>
+                      </main>
+                    </body></html>
+                no_mock:
+                  summary: NoMockForDate — no n2_mocks row for this date
+                  value: |
+                    <!DOCTYPE html>
+                    <html><head>...</head><body>
+                      <main>
+                        <h1>モックが見つかりません</h1>
+                        <p>2026-07-20 の N2 モックはまだ公開されていません。</p>
+                      </main>
+                    </body></html>
+                no_attempt:
+                  summary: NoAttemptYet — mock exists but user hasn't submitted
+                  value: |
+                    <!DOCTYPE html>
+                    <html><head>...</head><body>
+                      <main>
+                        <h1>2026-07-13 のモック</h1>
+                        <p>まだ提出していません。下のボタンから受験してください。</p>
+                        <a href="/today">今日のモックへ →</a>
+                      </main>
+                    </body></html>
+                invalid_date:
+                  summary: ErrorState — date param format invalid
+                  value: |
+                    <!DOCTYPE html>
+                    <html><head>...</head><body>
+                      <main>
+                        <h1>エラー</h1>
+                        <p>日付の形式が正しくありません (YYYY-MM-DD)。</p>
+                      </main>
+                    </body></html>
+        '302':
+          description: |
+            No Supabase session cookie, or session expired mid-request.
+            Browser follows redirect to /auth. The magic-link flow
+            (openapi/auth.yaml) is the entry point to re-establish a session.
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "/auth"
+        '500':
+          description: |
+            Server Component threw an uncaught error (e.g., Supabase client
+            exception, unexpected null in JSX). Next.js default error page.
+          content:
+            text/html:
+              schema:
+                type: string
+
+components:
+  schemas:
+    ScoreHeader:
+      description: |
+        Top of the result page: score fraction + pct + formatted total time.
+        pctColor thresholds: ≥80 → green (#16a34a), ≥60 → blue (#2563eb),
+        <60 → red (#dc2626).
+        formatTime outputs M分SS秒 (e.g., "4分05秒").
+      type: object
+      properties:
+        score:
+          type: integer
+          description: Number of correct answers (0–5).
+          example: 4
+          minimum: 0
+          maximum: 5
+        total:
+          type: integer
+          description: Total questions in the mock (always 5 per goal.md OQ-2).
+          example: 5
+        pct:
+          type: integer
+          description: "score/total × 100, rounded. Derived client-side from score+total."
+          example: 80
+          minimum: 0
+          maximum: 100
+        total_seconds:
+          type: integer
+          description: Sum of per-question time_seconds across all attempts.
+          example: 245
+
+    QuestionBreakdownRow:
+      description: |
+        Per-question block in the breakdown list. Rendered as <li> inside <ol>.
+        Correct/incorrect badge: #dcfce7/#fee2e2 background, 正解/不正解 text.
+        Prompt: pre-wrap, white-space preserved.
+        User answer: uppercase, e.g. "A". Correct answer shown only if incorrect.
+        Per-question time: shown as integer seconds, e.g. "45秒".
+        Explanation: inside <details>/<summary>, pre-wrap, only present when
+        q.explanation is truthy.
+      type: object
+      properties:
+        number:
+          type: integer
+          description: 1-based question number.
+          example: 1
+        is_correct:
+          type: boolean
+          description: Whether the user's answer matched q.correct_answer.
+          example: true
+        prompt:
+          type: string
+          description: The question prompt text (may contain Japanese, markdown ok).
+          example: "次の文の意味として最も近いものを選びなさい。"
+        user_answer:
+          type: string
+          nullable: true
+          description: |
+            User's selected answer (uppercased a|b|c|d). null only possible
+            in the orphan-row MissingQuestionRow path.
+          example: "A"
+        correct_answer:
+          type: string
+          description: |
+            The correct answer (uppercased). Only surfaced when is_correct is
+            false (when is_correct is true, correct_answer is omitted for clarity).
+            In the wire type it is always present; the page conditionally renders it.
+          example: "B"
+        time_seconds:
+          type: number
+          description: Time spent on this question in seconds.
+          example: 45
+        explanation:
+          type: string
+          nullable: true
+          description: |
+            Explanation text. Rendered inside <details>. null when
+            MissingQuestionRow (orphan question_id in attempts with no
+            matching n2_questions row).
+          example: "この文は「〜つつある」形で、「〜ている」よりかなが進んでいる様子を示します。"
+
+    ResultContentState:
+      description: |
+        Union of the 5 possible HTML content states rendered by the page.
+        Note: these are document shapes, not a machine-readable enum — the
+        page returns HTML, not JSON. A client or integration consuming this
+        spec should parse the HTML or call GET /api/attempts/{date} directly
+        for structured data (openapi/attempts.yaml).
+      oneOf:
+        - $ref: '#/components/schemas/ErrorState'
+        - $ref: '#/components/schemas/NoMockForDate'
+        - $ref: '#/components/schemas/NoAttemptYet'
+        - $ref: '#/components/schemas/Breakdown'
+        - $ref: '#/components/schemas/MissingQuestion'
+
+    ErrorState:
+      description: Triggered when the date URL param fails the DATE_RE.
+      type: object
+      properties:
+        _state:
+          type: string
+          enum: [error]
+        message:
+          type: string
+          example: "日付の形式が正しくありません (YYYY-MM-DD)。"
+
+    NoMockForDate:
+      description: Valid date, but no n2_mocks row found for that date.
+      type: object
+      properties:
+        _state:
+          type: string
+          enum: [no_mock]
+        date:
+          type: string
+          format: date
+          example: "2026-07-20"
+        body_text:
+          type: string
+          example: "モックが見つかりません"
+
+    NoAttemptYet:
+      description: Mock exists for date, but user has not submitted answers.
+      type: object
+      properties:
+        _state:
+          type: string
+          enum: [no_attempt]
+        date:
+          type: string
+          format: date
+          example: "2026-07-13"
+        body_text:
+          type: string
+          example: "まだ提出していません。下のボタンから受験してください。"
+
+    Breakdown:
+      description: |
+        Full breakdown — mock exists + user has submitted ≥1 attempt.
+        score/total ≥ 1 question answered. Per-question rows rendered
+        inside <ol>. Footer nav links to "/" and "/today".
+      type: object
+      properties:
+        _state:
+          type: string
+          enum: [breakdown]
+        date:
+          type: string
+          format: date
+          example: "2026-07-13"
+        score_header:
+          $ref: '#/components/schemas/ScoreHeader'
+        question_rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionBreakdownRow'
+        footer_nav:
+          type: object
+          properties:
+            home:
+              type: string
+              description: Relative path back to home.
+              example: "/"
+            today:
+              type: string
+              description: Relative path to today's mock.
+              example: "/today"
+
+    MissingQuestion:
+      description: |
+        Per-row soft-fail when an attempt row exists (question_id in
+        n2_attempts) but the n2_questions JOIN returned null (orphan).
+        The page renders a grey placeholder row per MissingQuestionRow
+        rather than throwing. This is NOT a separate HTTP response — it
+        is one possible row shape inside Breakdown.question_rows.
+      type: object
+      properties:
+        _state:
+          type: string
+          enum: [missing_question]
+        question_id:
+          type: string
+          format: uuid
+          description: The orphan question_id from n2_attempts.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        placeholder_text:
+          type: string
+          description: The text rendered in place of the missing question.
+          example: "問題データを取得できませんでした。"

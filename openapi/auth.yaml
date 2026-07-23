@@ -1,0 +1,327 @@
+openapi: 3.0.4
+info:
+  title: N2 Daily Mock Exam — Auth API
+  version: 0.1.0
+  description: |
+    HTTP contract for the magic-link authentication surface in the N2 Daily
+    Mock Exam webapp (Next.js App Router + Supabase). This spec is the
+    canonical, machine-readable description of the auth round-trip that
+    `app/auth/page.tsx` (client form) and `app/auth/callback/route.ts` (token
+    exchange) implement. Goal.md OQ-3: magic link + persistent device
+    sessions (long JWT TTL; email click → logged in; stays logged in).
+
+    Auth model:
+      * Magic link only. No password, no social, no phone OTP.
+      * Sign-in: user enters email at `/auth` → client calls
+        `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo } })`
+        → Supabase sends a clickable link to the user's inbox.
+      * The link lands at `/auth/callback?token=...&next=...`.
+      * `/auth/callback` (GET route handler) calls
+        `supabase.auth.setSession({ access_token, refresh_token })` which
+        writes the session cookie and refreshes the JWT.
+      * On success, `/auth/callback` redirects to the `next` param (sanitized
+        to relative paths only, else `/today`). On failure, it redirects back
+        to `/auth` with `?error_code=...&error_description=...` query params.
+
+    Status-code semantics for `/auth/callback`:
+      * 302 — redirect to `/today` (success) or `/auth?error_code=...` (failure).
+      * No body is returned by this endpoint; it is a pure redirect handler.
+      * All client-facing errors are surfaced via the redirect target's query
+        params (the client form at `/auth` reads them and renders an error
+        message).
+
+    Session persistence:
+      * Session cookie is written by `@supabase/ssr` (server cookie store)
+        and persisted to `localStorage` on the client (browser store).
+      * SSR and the browser share the same JWT via `createServerSupabase()`
+        reading cookies via `next/headers` and `createBrowserSupabase()`
+        reading `localStorage`. Both are stateless factories.
+      * The JWT TTL is configured server-side in Supabase (long-lived so the
+        "stays logged in" UX works). Out of scope for this spec.
+
+    Configuration (env vars):
+      * `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL (inlined into bundle).
+      * `NEXT_PUBLIC_SUPABASE_ANON_KEY` — anon key for browser/SSR auth.
+      * The service-role key is NOT used by this surface (RLS is sufficient
+        for the auth round-trip and the read-only mock fetch).
+
+    Cross-references:
+      * Schema artifacts: `~/ODIS/shared/loops/n2-build/question.schema.json`,
+        `daily_mock.schema.json`, `plan.schema.json` (DB-row shapes).
+      * Attempts HTTP contract: `openapi/attempts.yaml` (POST /api/attempts
+        + GET /api/attempts/{date}, cp5 + cp6 surface).
+      * This spec covers the cp4 surface (`subscriber_logs_in_takes_mock_completes`)
+        up to the redirect target.
+  contact:
+    name: n2-build loop
+    url: ~/ODIS/shared/loops/n2-build/
+servers:
+  - url: http://localhost:3000
+    description: Local Next.js dev server
+  - url: https://n2.example.com
+    description: Production (placeholder — replace with deployed origin)
+
+tags:
+  - name: auth
+    description: |
+      Magic-link sign-in + callback round-trip. The single HTTP endpoint
+      is GET /auth/callback; the rest of the flow is a client-side
+      call to `supabase.auth.signInWithOtp` (documented as an
+      informational schema for completeness).
+
+paths:
+  /auth/callback:
+    get:
+      tags: [auth]
+      operationId: magicLinkCallback
+      summary: Exchange the magic-link token for a session cookie
+      description: |
+        Called when the user clicks the magic-link in their email.
+
+        Flow:
+          1. Supabase sends an email to the user with a URL of the form
+             `https://<origin>/auth/callback?token=<jwt>&type=magiclink&...`
+             (Supabase may use `code` instead of `token` depending on config).
+          2. The browser navigates to this URL with all the query params
+             preserved.
+          3. This route handler extracts `token` (or `code`), `next`,
+             `error_code`, `error_description` from the URL.
+          4. On error (`error_code` present): redirects to
+             `/auth?error_code=...&error_description=...`.
+          5. On missing token: redirects to `/auth`.
+          6. On valid token: calls `supabase.auth.setSession({ refresh_token, access_token })`
+             which writes the session cookie via `@supabase/ssr`.
+          7. Sanitizes the `next` param (only relative paths allowed) and
+             redirects to that path (default `/today`).
+          8. On setSession error: redirects to `/auth?error_code=...&error_description=...`.
+
+        Note: this endpoint NEVER returns a JSON body — it is a pure
+        302 redirect handler. All responses are 302 Found.
+
+        Note: the access_token and refresh_token are passed as the same
+        `token` value because Supabase's magic-link flow packs both into
+        the single token parameter. The handler passes the same value to
+        both fields of `setSession`.
+      parameters:
+        - name: token
+          in: query
+          required: false
+          schema:
+            type: string
+            description: |
+              Magic-link token (Supabase JWT). May be in `token` or `code`
+              query param depending on Supabase auth config.
+        - name: code
+          in: query
+          required: false
+          schema:
+            type: string
+            description: |
+              Alternative magic-link token name. Some Supabase configs
+              use `code` instead of `token`. The handler prefers `token`
+              but falls back to `code`.
+        - name: next
+          in: query
+          required: false
+          schema:
+            type: string
+            description: |
+              Optional relative path to redirect to on success. Default
+              `/today`. The handler sanitizes this — only paths starting
+              with `/` are accepted; anything else is replaced with
+              `/today` to prevent open-redirect attacks.
+            example: '/today'
+        - name: error_code
+          in: query
+          required: false
+          schema:
+            type: string
+            description: |
+              Supabase error code (token expired, already used, etc.).
+              When present, the handler redirects to `/auth` with this
+              and `error_description` preserved.
+          example: 'otp_expired'
+        - name: error_description
+          in: query
+          required: false
+          schema:
+            type: string
+            description: |
+              Human-readable Supabase error description. Echoed back
+              to the client via the `/auth?error_description=...` redirect.
+          example: 'Email link is invalid or has expired'
+      responses:
+        '302':
+          description: |
+            Redirect. Always returns 302 Found — this endpoint never
+            emits a JSON body. The redirect target depends on the
+            request params and the result of `supabase.auth.setSession`:
+
+              * Success (valid token, setSession succeeds): redirect
+                to `next` (sanitized; default `/today`).
+              * Error from Supabase (token expired, etc.): redirect
+                to `/auth?error_code=...&error_description=...`.
+              * Missing token: redirect to `/auth`.
+              * setSession throws/fails: redirect to
+                `/auth?error_code=...&error_description=...`.
+          headers:
+            Location:
+              description: Redirect target URL.
+              schema:
+                type: string
+              examples:
+                success:
+                  summary: Valid magic-link token, redirect to /today
+                  value: '/today'
+                successWithNext:
+                  summary: Valid token + custom next param
+                  value: '/today'
+                missingToken:
+                  summary: No token in query params
+                  value: '/auth'
+                tokenError:
+                  summary: Supabase reported an error in the URL
+                  value: '/auth?error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired'
+                setSessionError:
+                  summary: setSession threw or returned an error
+                  value: '/auth?error_code=otp_expired&error_description=Token+has+expired+or+is+invalid'
+
+components:
+  schemas:
+    # Informational: the client-side request to Supabase's signInWithOtp is
+    # not an HTTP call from the webapp's perspective, but documenting it
+    # here as a schema makes the contract explicit and verifiable.
+    SignInWithOtpRequest:
+      type: object
+      description: |
+        Parameters passed to `supabase.auth.signInWithOtp(...)` from the
+        client at `/auth` (see `app/auth/page.tsx`). This is NOT a
+        Next.js HTTP endpoint — it is a direct call to the Supabase JS
+        client's auth method, which internally POSTs to
+        `<supabase_url>/auth/v1/otp`. Documented here so the full auth
+        round-trip is captured in one spec.
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address. Trimmed client-side before send.
+        options:
+          type: object
+          description: |
+            Optional sign-in options. `emailRedirectTo` MUST point at
+            `/auth/callback` on the deployed origin so the magic-link
+            click lands on this route handler.
+          properties:
+            emailRedirectTo:
+              type: string
+              format: uri
+              description: |
+                Absolute URL the magic-link click resolves to. Always
+                `${window.location.origin}/auth/callback` per the
+                implementation.
+              example: 'https://n2.example.com/auth/callback'
+    SignInWithOtpResponse:
+      type: object
+      description: |
+        Result of the `signInWithOtp` call. On success, `error` is null
+        and the user is shown a "check your email" confirmation. On
+        failure, `error` contains a Supabase error code + message.
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+          description: |
+            True if `error` is null (sign-in email sent). False if
+            `error` is non-null.
+        error:
+          type: object
+          nullable: true
+          description: |
+            Supabase error object on failure. Null on success.
+          properties:
+            message:
+              type: string
+              description: Human-readable error message.
+            code:
+              type: string
+              description: Machine-readable Supabase error code.
+              example: 'over_email_send_rate_limit'
+    SetSessionRequest:
+      type: object
+      description: |
+        Parameters passed to `supabase.auth.setSession(...)` from
+        `/auth/callback/route.ts`. The handler passes the magic-link
+        token as BOTH `access_token` and `refresh_token` (Supabase's
+        magic-link flow packs both into a single token).
+      required: [access_token, refresh_token]
+      properties:
+        access_token:
+          type: string
+          description: |
+            The magic-link token (Supabase access JWT). Same value as
+            `refresh_token`.
+        refresh_token:
+          type: string
+          description: |
+            The magic-link token (Supabase refresh JWT). Same value as
+            `access_token`.
+    SetSessionResponse:
+      type: object
+      description: |
+        Result of `setSession`. On success, the session cookie has been
+        written and the handler redirects to `next`. On failure, the
+        handler redirects to `/auth` with the error surfaced.
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+          description: True if `error` is null (session set successfully).
+        error:
+          type: object
+          nullable: true
+          properties:
+            code:
+              type: string
+              description: Supabase error code (mapped to `error_code`).
+            message:
+              type: string
+              description: Human-readable error (mapped to `error_description`).
+    AuthRedirectTarget:
+      type: string
+      description: |
+        The Location header value for the 302 redirect. Possible values:
+
+          * `/today` — success (default `next`).
+          * `/today?...` — success with custom next.
+          * `/auth` — missing token.
+          * `/auth?error_code=...&error_description=...` — Supabase error
+            or setSession failure.
+      enum:
+        - '/today'
+        - '/auth'
+      # Note: only the base paths are enumerated; the query-string variants
+      # are documented via the examples in the 302 response header schema.
+    EmailAddress:
+      type: string
+      format: email
+      description: |
+        User email address. Validated client-side with the HTML5 `type="email"`
+        input constraint. Trimmed before being passed to `signInWithOtp`.
+      example: 'jackson@example.com'
+    SupabaseErrorCode:
+      type: string
+      description: |
+        Supabase auth error codes. Documented values are observed in
+        the `/auth/callback` handler's error-redirection path.
+      enum:
+        - 'unknown'
+        - 'otp_expired'
+        - 'access_denied'
+      example: 'otp_expired'
+
+# components.responses is intentionally absent: there are no reusable
+# response objects here — the only response is 302 (redirect), documented
+# inline at /auth/callback.
+
+security: []  # Magic-link endpoints don't require an existing session.
