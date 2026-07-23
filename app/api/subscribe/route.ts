@@ -46,12 +46,13 @@ export async function POST(request: NextRequest) {
       { onConflict: 'user_id' },
     );
   } else {
-    // Opt out: upsert with unsubscribed_at = now (keep subscribed_at for audit)
+    // Opt out: upsert with unsubscribed_at = now. subscribed_at is omitted
+    // so an existing row keeps its original value for audit (upsert only
+    // updates supplied columns); a brand-new row gets the column DEFAULT.
     await service.from('n2_subscribers').upsert(
       {
         user_id: userId,
         email,
-        subscribed_at: now,
         unsubscribed_at: now,
       },
       { onConflict: 'user_id' },

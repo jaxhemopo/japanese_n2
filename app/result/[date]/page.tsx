@@ -97,12 +97,15 @@ export default async function ResultPage({ params }: { params: { date: string } 
   // masthead shows the date in question, not today.
   const dateObj = new Date(`${date}T00:00:00+09:00`);
   const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const metaDay = dateObj.getUTCDate();
-  const metaMonth = MONTH_ABBR[dateObj.getUTCMonth()];
+  // Format in JST — getUTCDate/getUTCMonth on a +09:00-constructed date
+  // reads the previous UTC day.
+  const metaDay = Number(dateObj.toLocaleDateString('en-US', { day: 'numeric', timeZone: 'Asia/Tokyo' }));
+  const metaMonth = MONTH_ABBR[Number(dateObj.toLocaleDateString('en-US', { month: 'numeric', timeZone: 'Asia/Tokyo' })) - 1];
   // Two-digit chunks per IssueMeta spec — fix mirrored from
   // components/IssueMeta.tsx so /result/[date] doesn't regress to "2 / 6".
-  const metaYearTop = String(dateObj.getUTCFullYear()).slice(0, 2);
-  const metaYearBottom = String(dateObj.getUTCFullYear()).slice(2, 4);
+  const metaYear = dateObj.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'Asia/Tokyo' });
+  const metaYearTop = metaYear.slice(0, 2);
+  const metaYearBottom = metaYear.slice(2, 4);
 
   return (
     <TiltedCard>

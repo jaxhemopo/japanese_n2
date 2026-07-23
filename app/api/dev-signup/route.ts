@@ -12,6 +12,15 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  // Gated behind DEV_SIGNUP_SECRET (same Bearer pattern as the cron routes).
+  // Fail closed: if the env var is missing, nobody gets in — this endpoint
+  // creates auto-confirmed accounts via the service-role key.
+  const secret = process.env.DEV_SIGNUP_SECRET;
+  const authHeader = request.headers.get('authorization');
+  if (!secret || authHeader !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { email, password } = await request.json();
 
   if (!email || !password) {

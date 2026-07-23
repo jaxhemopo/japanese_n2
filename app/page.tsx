@@ -31,8 +31,9 @@ export default async function LandingPage() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // YYYY-MM-DD in UTC — used for the n2_mocks lookup (DB column is date-typed).
-  const today = new Date().toISOString().slice(0, 10);
+  // YYYY-MM-DD in JST (sv-SE formats as ISO date) — used for the n2_mocks
+  // lookup (DB column is date-typed, keyed by JST day like the rest of the app).
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
   const { data: todayMock } = await supabase
     .from('n2_mocks')
     .select('date, category_dist, target_tags, created_at')

@@ -88,6 +88,9 @@ export default function InteractiveMock({
   // triggered his spam-click instinct. Now the submit gets instant
   // visual confirmation, and the user picks when to view the result.
   const [submitted, setSubmitted] = useState(false);
+  // Submit failure (non-OK response or thrown fetch — offline, timeout).
+  // Answers stay in state, so the same 提出する button retries the POST.
+  const [submitError, setSubmitError] = useState<string | null>(null);
   // Guard against rapid double-clicks submitting the same payload 3×.
   // `setSubmitting(true)` is async (queued re-render), so the disabled
   // prop on the button doesn't take effect until the next paint — a
@@ -172,10 +175,11 @@ export default function InteractiveMock({
             // After submit: show correct/wrong state for all options.
             // During picking: show selected for the picked option only.
             const isCorrect = optId === correctId;
+            const revealed = submitting || submitted;
             let state: 'default' | 'selected' | 'correct' | 'wrong' = 'default';
-            if (!submitting && isPicked) state = 'selected';
-            if (submitting && isCorrect) state = 'correct';
-            if (submitting && isPicked && !isCorrect) state = 'wrong';
+            if (!revealed && isPicked) state = 'selected';
+            if (revealed && isCorrect) state = 'correct';
+            if (revealed && isPicked && !isCorrect) state = 'wrong';
             return (
               <li key={opt.id}>
                 <OptionButton
@@ -188,7 +192,7 @@ export default function InteractiveMock({
                   // pick.) Timing still reflects "time on this question"
                     // (latest pick − question start), so a re-pick inflates
                     // timing by the indecision window — acceptable trade-off.
-                  disabled={submitting}
+                  disabled={submitting || submitted}
                   onClick={() =>
                     setPicked((p) => ({
                       ...p,
@@ -213,6 +217,12 @@ export default function InteractiveMock({
           </Link>
         </div>
       ) : (
+        <>
+        {submitError && (
+          <p role="alert" style={{ marginTop: 20, marginBottom: 0, fontSize: 13, color: 'var(--wrong)', lineHeight: 1.6 }}>
+            {submitError}
+          </p>
+        )}
         <footer style={{ marginTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 13, color: 'var(--text-3)' }}>
             {choice ? '回答済み' : '選択肢をタップしてください'}
@@ -249,6 +259,7 @@ export default function InteractiveMock({
               };
 
               setSubmitting(true);
+              setSubmitError(null);
               try {
                 const res = await fetch('/api/attempts', {
                   method: 'POST',
@@ -260,7 +271,11 @@ export default function InteractiveMock({
                   // to /result/[date]). The success banner stays visible
                   // until the user clicks 結果を見る → to navigate.
                   setSubmitted(true);
+                } else {
+                  setSubmitError(`提出に失敗しました（エラー ${res.status}）。もう一度お試しください。`);
                 }
+              } catch {
+                setSubmitError('提出に失敗しました。通信環境を確認して、もう一度お試しください。');
               } finally {
                 setSubmitting(false);
                 submittingRef.current = false;
@@ -281,9 +296,10 @@ export default function InteractiveMock({
             cursor: !choice ? 'not-allowed' : 'pointer',
           }}
         >
-          {isLast ? (submitting ? '提出中...' : '提出する') : '次へ →'}
+          {isLast ? (submitting ? '提出中...' : submitError ? 'もう一度提出する' : '提出する') : '次へ →'}
         </button>
       </footer>
+      </>
       )}
     </>
   );

@@ -30,8 +30,15 @@ import nodemailer from 'nodemailer';
 
 const GMAIL_USER = process.env.GMAIL_USER;
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
-const UNSUBSCRIBE_SECRET =
-  process.env.UNSUBSCRIBE_SECRET || 'dev-only-secret-rotate-this-in-v1';
+// No fallback: a hardcoded default would make tokens forgeable if the env
+// var is ever missing in prod. Resolved lazily so builds without env work.
+function getUnsubscribeSecret(): string {
+  const secret = process.env.UNSUBSCRIBE_SECRET;
+  if (!secret) {
+    throw new Error('UNSUBSCRIBE_SECRET is not set');
+  }
+  return secret;
+}
 const FROM_ADDRESS =
   process.env.EMAIL_FROM ||
   (GMAIL_USER ? `N2 Daily Mock <${GMAIL_USER}>` : 'N2 Daily Mock <onboarding@resend.dev>');
@@ -96,7 +103,7 @@ export function renderEmail(params: {
   // without requiring full Japanese locale handling in HTML email clients.
   const dateObj = new Date(`${date}T00:00:00+09:00`);
   const month = dateObj.toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Tokyo' });
-  const day = dateObj.getUTCDate();
+  const day = dateObj.toLocaleDateString('en-US', { day: 'numeric', timeZone: 'Asia/Tokyo' });
   const dateLabel = `${month} ${day}`;
 
   const subject = `今日の N2 モック公開 — ${dateLabel}`;
@@ -193,25 +200,29 @@ Unsubscribe: ${unsubscribeUrl}`;
  *  Unsubscribe tokens (HMAC-signed)                          *
  * ---------------------------------------------------------- */
 
+// Token format: `b64url(userId).ts.sig` (3 dot-separated parts). The HMAC
+// payload is `${b64UserId}.${ts}` — sign and verify must agree on both.
 export function signUnsubscribeToken(userId: string): string {
-  const payload = `${userId}.${Math.floor(Date.now() / 1000)}`;
+  const b64UserId = Buffer.from(userId).toString('base64url');
+  const ts = Math.floor(Date.now() / 1000);
+  const payload = `${b64UserId}.${ts}`;
   const sig = crypto
-    .createHmac('sha256', UNSUBSCRIBE_SECRET)
+    .createHmac('sha256', getUnsubscribeSecret())
     .update(payload)
     .digest('base64url');
-  return `${Buffer.from(payload).toString('base64url')}.${sig}`;
+  return `${payload}.${sig}`;
 }
 
 export function verifyUnsubscribeToken(token: string): string | null {
   try {
     const parts = token.split('.');
-    if (parts.length !== 4) return null; // base64 has 2 dots (payload.encoded has 2 because of the trailing ts)
+    if (parts.length !== 3) return null;
     const [b64UserId, tsStr, sig] = parts;
     if (!b64UserId || !tsStr || !sig) return null;
     const userId = Buffer.from(b64UserId, 'base64url').toString('utf8');
-    const payload = `${userId}.${tsStr}`;
+    const payload = `${b64UserId}.${tsStr}`;
     const expected = crypto
-      .createHmac('sha256', UNSUBSCRIBE_SECRET)
+      .createHmac('sha256', getUnsubscribeSecret())
       .update(payload)
       .digest('base64url');
     if (sig.length !== expected.length) return null;

@@ -6,9 +6,10 @@
  *   - Provides the <html> and <body> wrappers that Next.js App Router requires
  *   - Accepts the root `children` prop (each page's content)
  *   - Sets base metadata (title, description, favicon via the Metadata API)
- *   - Injects the Supabase auth session into the component tree via
- *     React context so client components don't each need to instantiate
- *     their own client on mount (avoids a flash-of-unauthenticated state)
+ *
+ * Auth is NOT touched here — middleware refreshes the session and each
+ * page reads it as needed. (A leftover unused getSession() call was
+ * removed 2026-07-23; it cost a Supabase roundtrip on every request.)
  *
  * Visual layer:
  *   - Three font families are loaded via next/font/google:
@@ -28,7 +29,6 @@ import {
   Noto_Sans_JP,
   Noto_Serif_JP,
 } from 'next/font/google';
-import { createServerSupabase } from '@/lib/supabase';
 import './globals.css';
 
 // Body / UI face — Noto Sans JP. UI chrome, lede, body text.
@@ -79,8 +79,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * RootLayout — the only Server Component in the tree that may read the
- * Supabase auth session directly without going through middleware.
+ * RootLayout — renders the HTML shell only; no data fetching.
  *
  * The body has no inline font-family; component-level CSS uses the
  * font-family tokens (var(--font-sans) / var(--font-serif)) so each
@@ -91,11 +90,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createServerSupabase();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
   const fontClass = [
     notoSansJP.variable,
     notoSerifJP.variable,
