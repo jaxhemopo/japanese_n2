@@ -1,1 +1,0 @@
-self.__NEXT_FONT_MANIFEST='{"pages":{},"app":{"/Users/jacksonhemopo/projects/japanese-n2/app/layout":["static/media/24f6ebe2756575bd-s.p.woff2","static/media/5963f2babe8689ab-s.p.woff2","static/media/5963f2babe8689ab-s.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}';
