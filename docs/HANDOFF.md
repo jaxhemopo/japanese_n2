@@ -13,10 +13,13 @@ revision digest. Live at **https://japanese-n2.vercel.app**.
 - **Vercel project:** `japanese-n2`, org `jaxhemopos-projects`
 - **Supabase project:** `ucppuzfyjrtcchdhwxto` (shared ODIS project, not
   dedicated to this app — other ODIS tables live alongside `n2_*` ones)
-- **No git repo.** Every deploy is a manual `vercel --prod --yes` from
-  `~/projects/japanese-n2`. There is no version history and nothing
-  auto-deploys. Worth fixing (git init + push) before this gets much bigger,
-  but that's a decision for whoever owns it next, not done yet.
+- **Git repo now exists** (initialized 2026-07-24, remote
+  `github.com/jaxhemopo/japanese_n2`). Build artifacts (`node_modules/`,
+  `.next/`, `out/`, `.env`, `.lh-*.json`, `*.tsbuildinfo`) are git-ignored;
+  a 109 MB Next.js SWC native binary was stripped from history with
+  git-filter-repo so the repo pushes within GitHub's 100 MB file-size limit.
+  Deploys are still a manual `vercel --prod --yes` from
+  `~/projects/japanese-n2` — nothing auto-deploys on push yet.
 
 ## Where the keys are
 
@@ -165,7 +168,9 @@ source of truth).
 
 ## What's still open
 
-- No git repo (see above).
+- No auto-deploy on push yet — Vercel Git integration isn't wired, so
+  deploys stay manual (`vercel --prod --yes`). The repo itself now exists
+  (see above).
 - Cross-user "what most people struggle with" aggregation is architecturally
   ready (RLS forces it server-side via service-role, which is already how
   the revision digest works) but not very meaningful yet with one real user.
