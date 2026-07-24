@@ -9,7 +9,7 @@
 - **Authoritative generator:** `app/api/cron/daily-mock/route.ts` + `app/api/cron/revision-digest/route.ts`. Don't edit `~/ODIS/shared/pipelines/n2-generator/` — frozen reference only.
 - **Live state:** Supabase tables `n2_mocks`, `n2_pipeline_runs`, `n2_rotation_state`.
 - **Credentials:** all in `vercel env ls production` (encrypted, Production-only). Local `.env.local` holds only the 2 `NEXT_PUBLIC_*` (URL + anon key — by-design public).
-- **No git repo.** Every deploy is a manual `npx vercel --prod --yes` from this directory.
+- **Git repo** (remote `github.com/jaxhemopo/japanese_n2`); build artifacts git-ignored. No auto-deploy — every deploy is still a manual `npx vercel --prod --yes` from this directory.
 - **Budget cap:** ~4 Gemini calls/day total. Don't add more LLM calls anywhere in this app without confirming with Jackson.
 
 ## Why this file exists
