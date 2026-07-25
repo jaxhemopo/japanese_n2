@@ -44,19 +44,25 @@ export async function GET(request: NextRequest) {
 
   const { data: lastDigest } = await supabase
     .from('n2_revision_digests')
-    .select('run_date')
+    .select('run_date, created_at')
     .order('run_date', { ascending: false })
     .limit(1)
     .maybeSingle();
 
+  // Window starts at the moment the previous digest was actually created —
+  // not at midnight of its run_date, which double-counted every attempt
+  // made on the previous digest day (they'd already been ranked by that
+  // digest). created_at is the precise boundary; run_date only kept for
+  // the stored window_start date column.
   const windowStart = lastDigest
     ? lastDigest.run_date
     : jstDateString(new Date(Date.now() - 4 * 24 * 60 * 60 * 1000));
+  const windowStartTs = lastDigest?.created_at ?? `${windowStart}T00:00:00+09:00`;
 
   const { data: attempts, error: attemptsError } = await supabase
     .from('n2_attempts')
     .select('question_id, correct')
-    .gte('created_at', `${windowStart}T00:00:00+09:00`)
+    .gt('created_at', windowStartTs)
     .not('question_id', 'is', null);
 
   if (attemptsError) {
@@ -66,9 +72,13 @@ export async function GET(request: NextRequest) {
   const stats = new Map<string, { total: number; wrong: number }>();
   for (const a of attempts ?? []) {
     const qid = a.question_id as string;
+    // Rows with correct=null (pre-2026-07-24 attempts where the client
+    // didn't supply a correct_map) are unknowable — skip them rather than
+    // counting them as wrong, which skewed the "hardest questions" ranking.
+    if (a.correct !== true && a.correct !== false) continue;
     const entry = stats.get(qid) ?? { total: 0, wrong: 0 };
     entry.total += 1;
-    if (a.correct !== true) entry.wrong += 1;
+    if (a.correct === false) entry.wrong += 1;
     stats.set(qid, entry);
   }
 

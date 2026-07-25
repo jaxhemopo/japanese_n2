@@ -11,8 +11,11 @@
  * no email dependency for login at all, which sidesteps that whole failure
  * class rather than debugging it further.
  *
- * One form, two modes (sign in / create account) via a toggle — Phase 1
- * is Jackson-only, so this stays intentionally simple.
+ * Signup toggle removed 2026-07-24: it POSTed to /api/dev-signup with no
+ * Authorization header, and that route requires a Bearer secret — every
+ * UI signup attempt 401'd, guaranteed. dev-signup is now blocked in prod
+ * entirely; new accounts come in via "Continue with Google" (Supabase
+ * creates the user on first OAuth sign-in) or are provisioned manually.
  *
  * Visual layer (design.md 2026-07-19): wrapped in TiltedCard + IssueMeta
  * composition on the dark olive canvas. NO PhoneMockup (keeps the form
@@ -28,7 +31,6 @@ import { TiltedCard } from '@/components/TiltedCard';
 
 export default function AuthPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -63,43 +65,17 @@ export default function AuthPage() {
     try {
       const supabase = createBrowserSupabase();
 
-      if (mode === 'signin') {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-        if (error) {
-          setStatus('error');
-          setErrorMessage(error.message);
-          return;
-        }
-        router.push('/today');
-        router.refresh();
-      } else {
-        const signupRes = await fetch('/api/dev-signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim(), password }),
-        });
-        const signupBody = await signupRes.json();
-        if (!signupRes.ok) {
-          setStatus('error');
-          setErrorMessage(signupBody.error ?? 'Could not create account.');
-          return;
-        }
-
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-        if (error) {
-          setStatus('error');
-          setErrorMessage(error.message);
-          return;
-        }
-        router.push('/today');
-        router.refresh();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        setStatus('error');
+        setErrorMessage(error.message);
+        return;
       }
+      router.push('/today');
+      router.refresh();
     } catch (err) {
       setStatus('error');
       setErrorMessage(err instanceof Error ? err.message : 'Something went wrong — please try again.');
@@ -126,7 +102,7 @@ export default function AuthPage() {
         N2 Daily Mock Exam
       </h1>
       <p className="auth-subhead">
-        {mode === 'signin' ? 'Sign in to continue.' : 'Create an account to get started.'}
+        Sign in to continue.
       </p>
 
       {/* 2026-07-23 gap-killer: italic-serif editorial sub-pitch between
@@ -200,20 +176,15 @@ export default function AuthPage() {
           disabled={status === 'loading'}
           className="btn-primary btn-primary--block"
         >
-          {status === 'loading' ? '...' : mode === 'signin' ? 'Sign In →' : 'Create Account →'}
+          {status === 'loading' ? '...' : 'Sign In →'}
         </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            setMode(mode === 'signin' ? 'signup' : 'signin');
-            setStatus('idle');
-            setErrorMessage('');
-          }}
-          className="auth-toggle"
-        >
-          {mode === 'signin' ? "Don't have an account? Create one" : 'Already have an account? Sign in'}
-        </button>
+        {/* Signup toggle removed 2026-07-24 — it hit /api/dev-signup
+            without the required Bearer secret and 401'd every time.
+            New accounts: Continue with Google above. */}
+        <p className="auth-toggle" style={{ cursor: 'default' }}>
+          New here? Continue with Google above to create an account.
+        </p>
       </form>
 
       <p className="auth-footer-link">

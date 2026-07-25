@@ -23,24 +23,37 @@ type SubRow = {
   last_sent_at: string | null;
 };
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams?: { subscribe?: string };
+}) {
   const supabase = createServerSupabase();
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData?.session?.user) {
+  // getUser() revalidates the JWT server-side (getSession() only trusts
+  // the cookie) — swapped 2026-07-24.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
     redirect('/auth');
   }
-  const user = sessionData.session.user;
   const userId = user.id;
   const email = user.email ?? '(no email on file)';
 
   // Read subscription status via service role (bypasses RLS for read, fine for own-data)
   const service = createServiceRoleSupabase();
-  const { data: subRow } = await service
+  const { data: subRow, error: subReadErr } = await service
     .from('n2_subscribers')
     .select('subscribed_at, unsubscribed_at, email_send_count, last_sent_at')
     .eq('user_id', userId)
     .maybeSingle();
+  if (subReadErr) {
+    // Surface instead of silently rendering "not subscribed" — this state
+    // hid a 3-day outage where the n2_subscribers table didn't exist.
+    console.error('[/settings] subscription read failed:', subReadErr.message);
+  }
   const sub = subRow as SubRow | null;
+  const toggleFailed = searchParams?.subscribe === 'error' || !!subReadErr;
 
   const isSubscribed = !!sub && !sub.unsubscribed_at;
   const toggleValue = isSubscribed ? 'false' : 'true';
@@ -84,6 +97,12 @@ export default async function SettingsPage() {
 
       <section className="card-section">
         <h3 className="card-h3">Daily mock notifications</h3>
+        {toggleFailed && (
+          <p role="alert" style={{ fontSize: 13, lineHeight: 1.6, color: '#8a3b2e', marginBottom: 12 }}>
+            設定の保存に失敗しました。時間をおいてもう一度お試しください。
+            (The last change could not be saved — please try again.)
+          </p>
+        )}
         <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)', marginBottom: 16 }}>
           Get an email each morning when today&rsquo;s 5-question mock is published.
           Sent at ~07:00 JST by the daily cron &mdash; one email per subscriber per day,

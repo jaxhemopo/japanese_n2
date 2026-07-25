@@ -1,12 +1,28 @@
 {
   "crons": [
     {
-      "path": "/api/cron/revision-digest",
-      "schedule": "0 23 * * *"
+      "path": "/api/cron/daily-mock",
+      "schedule": "30 20 * * *"
+    },
+    {
+      "path": "/api/cron/daily-mock",
+      "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/cron/daily-mock",
+      "schedule": "30 21 * * *"
     },
     {
       "path": "/api/cron/daily-mock",
       "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/cron/daily-mock",
+      "schedule": "30 22 * * *"
+    },
+    {
+      "path": "/api/cron/revision-digest",
+      "schedule": "0 23 * * *"
     }
   ]
 }

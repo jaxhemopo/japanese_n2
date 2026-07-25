@@ -12,6 +12,15 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  // NOT AVAILABLE IN PRODUCTION — gated in code, not just by env var
+  // (2026-07-24, applying the BYPASS_AUTH lesson from docs/HANDOFF.md:
+  // privileged dev-only surfaces must be impossible to reach in prod even
+  // if someone fat-fingers the env). Account creation in prod happens via
+  // Google OAuth at /auth, or manually through the Supabase dashboard.
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 404 });
+  }
+
   // Gated behind DEV_SIGNUP_SECRET (same Bearer pattern as the cron routes).
   // Fail closed: if the env var is missing, nobody gets in — this endpoint
   // creates auto-confirmed accounts via the service-role key.

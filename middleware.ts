@@ -45,5 +45,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // api/cron/* and api/unsubscribe are excluded (2026-07-24): they are
+  // Bearer-token / HMAC-token authenticated and never carry a user
+  // session, so the getSession() refresh here was a pure wasted Supabase
+  // round-trip on every cron fire and unsubscribe click. Other /api
+  // routes keep the middleware so an expired session is refreshed before
+  // the route handler runs.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/cron|api/unsubscribe).*)'],
 };

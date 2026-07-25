@@ -118,7 +118,7 @@ export default function InteractiveMock({
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+      <div className="mock-header__row" style={{ marginBottom: 4 }}>
         <div className="mock-date-label">
           {month} {day}
         </div>
@@ -131,13 +131,13 @@ export default function InteractiveMock({
         </Link>
       </div>
       <header className="mock-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+        <div className="mock-header__row" style={{ marginBottom: 12 }}>
           <StreakBadge count={streak} />
           <div style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.8 }}>
             {['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][parseInt(mock.date.slice(5,7))-1]} {mock.date.slice(8)}
           </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="mock-header__row mock-header__row--centered">
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>今日の N2 モック</div>
             <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500, marginTop: 2 }}>
@@ -160,14 +160,14 @@ export default function InteractiveMock({
 
       <article className="question-card">
         {SUBTYPE_INSTRUCTIONS[current.tags?.[0]] && (
-          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+          <div className="mock-subtype-eyebrow">
             {SUBTYPE_INSTRUCTIONS[current.tags[0]]}
           </div>
         )}
-        <div style={{ fontSize: 16, lineHeight: 1.7, marginBottom: 20, whiteSpace: 'pre-wrap', color: 'var(--text)' }}>
+        <div className="mock-question-prompt">
           <PromptWithTarget prompt={current.prompt} targetWord={current.target_word} />
         </div>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <ul className="option-list">
           {current.options.map((opt) => {
             const isPicked = choice === opt.id;
             const correctId = current.correct_answer?.toLowerCase();
@@ -223,7 +223,7 @@ export default function InteractiveMock({
             {submitError}
           </p>
         )}
-        <footer style={{ marginTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <footer className="mock-header__row mock-header__row--centered" style={{ marginTop: 20 }}>
           <span style={{ fontSize: 13, color: 'var(--text-3)' }}>
             {choice ? '回答済み' : '選択肢をタップしてください'}
           </span>
@@ -246,15 +246,12 @@ export default function InteractiveMock({
                 timings[q.id] = Math.round(answered - start);
               }
 
-              const correct_map: Record<string, string> = {};
-              for (const q of mock.questions) {
-                correct_map[q.id] = q.correct_answer;
-              }
-
+              // correct_map removed 2026-07-24: the server now computes
+              // correctness from n2_questions itself — the client no
+              // longer tells the server which answers were right.
               const payload = {
                 date: mock.date,
                 answers: Object.fromEntries(Object.entries(picked).map(([qid, v]) => [qid, v.answer])),
-                correct_map,
                 timings,
               };
 
@@ -285,16 +282,8 @@ export default function InteractiveMock({
             }
           }}
           disabled={!choice}
-          style={{
-            padding: '10px 22px',
-            background: !choice ? 'var(--border)' : 'var(--accent)',
-            color: !choice ? 'var(--text-3)' : '#fff',
-            border: 'none',
-            borderRadius: 8,
-            fontSize: 15,
-            fontWeight: 500,
-            cursor: !choice ? 'not-allowed' : 'pointer',
-          }}
+          className={`btn-primary${!choice ? ' btn-primary--disabled' : ''}`}
+          style={{ padding: '10px 22px', fontSize: 15, fontWeight: 500, borderRadius: 8 }}
         >
           {isLast ? (submitting ? '提出中...' : submitError ? 'もう一度提出する' : '提出する') : '次へ →'}
         </button>

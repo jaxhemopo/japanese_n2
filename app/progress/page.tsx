@@ -30,18 +30,20 @@ type AttemptRow = {
 
 export default async function ProgressPage() {
   const supabase = createServerSupabase();
+  // getUser() revalidates the JWT server-side (getSession() only trusts
+  // the cookie) — swapped 2026-07-24.
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect('/auth');
   }
 
   const { data, error } = await supabase
     .from('n2_attempts')
     .select('question_id, correct, time_seconds, created_at, n2_questions(tags)')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(2000);
 

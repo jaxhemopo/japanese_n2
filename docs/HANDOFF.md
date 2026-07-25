@@ -228,3 +228,36 @@ ships an obvious attack target.
 SMTP envelope id (`<...@gmail.com>` format). Field name preserved for
 caller compatibility; rename to `provider_message_id` next time the
 email schema is touched.
+
+## 2026-07-25 — daily-mock v4 (one attempt per cron fire) + hardening re-applied
+
+Context: the 2026-07-24 hardening pass was written to disk and deployed, but
+was NOT committed to git (no repo existed yet). When the repo was later
+initialised, the working tree reset and those changes were lost — so the
+07-25 mock ran on the old fragile code and timed out (FUNCTION_INVOCATION_TIMEOUT,
+no row written). Everything is now committed so it can't vanish again.
+
+Generator rewrite (`app/api/cron/daily-mock/route.ts`, PIPELINE_VERSION
+`n2-daily-mock-cron-v4`): each cron invocation now runs at most ONE
+generate+verify attempt (~<55s, safely under Hobby's 60s wall). Attempts are
+chained across MULTIPLE morning cron fires via n2_pipeline_runs state:
+`in_progress` = lock (atomic on the run_date UNIQUE constraint), `failed` +
+`rotation_pending` marker = resume next fire, `failed` + `critical` = terminal.
+Attempt escalation: 1 initial → 2,3 same_subtype retry → 4 pool_substitute
+(count-inheriting, same-category). Transport errors (hung Gemini) don't count
+toward the 4-attempt budget. Rotation advances from what ACTUALLY published.
+
+vercel.json: FIVE daily-mock schedules across 05:30–07:30 JST (20:30/21:00/
+21:30/22:00/22:30 UTC) to give ~4 attempts room within Hobby's ±59min jitter,
+plus revision-digest at 08:00 JST (23:00 UTC). No-op fires make zero Gemini
+calls; clean day = 1 attempt (2 calls); worst case = 4 attempts (8 calls).
+
+Post-cron checks: treat `in_progress` with a recent `started_at` (<3 min) as
+"still running", not a failure.
+
+Also re-applied: server-side scoring in /api/attempts (client `correct_map`
+ignored), answer/ownership validation, getUser() on protected server paths,
+dev-signup blocked in prod, broken signup toggle removed from /auth, digest
+window fix, middleware trim, font dedupe. DB migrations (n2_subscribers,
+n2_email_send_log, RLS fix, n2_mark_email_sent RPC) were applied 2026-07-24
+and remain live.

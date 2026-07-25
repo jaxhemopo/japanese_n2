@@ -34,12 +34,15 @@ export async function GET(
   }
 
   const supabase = createServerSupabase();
-  const sessionResult = await supabase.auth.getSession();
-  const session = sessionResult.data.session;
-  if (!session?.user) {
+  // getUser() revalidates the JWT server-side (getSession() only trusts
+  // the cookie) — swapped 2026-07-24.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
-  const userId = session.user.id;
+  const userId = user.id;
 
   try {
     const data = await fetchResultForDate(supabase, userId, date);
