@@ -186,6 +186,26 @@ function structuralCheck(c: Candidate): string[] {
   return issues;
 }
 
+// Gemini strongly biases the correct answer toward option 1 (~73% of
+// questions historically). Shuffle each question's options and remap
+// correct_answer so the answer position is roughly uniform. Option ids are
+// positional ("1".."4"); we keep that scheme and move the contents around.
+function shuffleOptions(c: Candidate): Candidate {
+  const correctOpt = c.options.find((o) => o.id === c.correct_answer);
+  const arr = [...c.options];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  let correct_answer = c.correct_answer;
+  const options = arr.map((o, idx) => {
+    const id = String(idx + 1);
+    if (o === correctOpt) correct_answer = id;
+    return { id, text: o.text, note: o.note };
+  });
+  return { ...c, options, correct_answer };
+}
+
 function buildGenerateSections(
   plan: { subtype: string; count: number }[],
   recency: Record<string, { prompt: string; correct_answer: string }[]>,
@@ -556,18 +576,21 @@ export async function GET(request: NextRequest) {
   }
 
   // --- Publish (all 5 passed) ---
-  const rows = passing.map((c) => ({
-    category: CATEGORY_MAP[c.subtype],
-    prompt: c.prompt,
-    target_word: c.target_word ?? null,
-    options: c.options,
-    correct_answer: c.correct_answer,
-    explanation: c.explanation,
-    explanation_en: c.explanation_en,
-    passage: c.passage ?? null,
-    source_id: `gemini_generated_verified_v4`,
-    tags: [c.subtype],
-  }));
+  const rows = passing.map((c) => {
+    const s = shuffleOptions(c); // de-bias the answer position
+    return {
+      category: CATEGORY_MAP[c.subtype],
+      prompt: c.prompt,
+      target_word: c.target_word ?? null,
+      options: s.options,
+      correct_answer: s.correct_answer,
+      explanation: c.explanation,
+      explanation_en: c.explanation_en,
+      passage: c.passage ?? null,
+      source_id: `gemini_generated_verified_v4`,
+      tags: [c.subtype],
+    };
+  });
   const { data: stored, error: storeError } = await supabase.from('n2_questions').insert(rows).select('id, tags');
   if (storeError || !stored) {
     await logFailedRun(supabase, today, `store step failed: ${storeError?.message}`);

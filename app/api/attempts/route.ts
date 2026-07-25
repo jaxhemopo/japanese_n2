@@ -43,7 +43,6 @@ import { createServerSupabase } from '@/lib/supabase';
 type AnswerMap = Record<string, string>;
 type TimingMap = Record<string, number>;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const VALID_ANSWERS = new Set(['a', 'b', 'c', 'd']);
 
 export async function POST(request: NextRequest) {
   const supabase = createServerSupabase();
@@ -81,14 +80,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'no answers provided' }, { status: 400 });
   }
   for (const qid of questionIds) {
-    const a = answers[qid];
-    if (typeof a !== 'string' || !VALID_ANSWERS.has(a.toLowerCase())) {
+    if (typeof answers[qid] !== 'string' || answers[qid].length === 0) {
       return NextResponse.json(
-        { error: `invalid answer for question ${qid} (expected a|b|c|d)` },
+        { error: `invalid answer for question ${qid}` },
         { status: 400 },
       );
     }
   }
+  // NB: option ids are "1".."4" (numeric), not a|b|c|d — the answer value is
+  // validated against each question's actual option ids after the fetch below.
 
   // The submitted questions must belong to the date's published mock.
   const { data: mock, error: mockErr } = await supabase
@@ -113,10 +113,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Server-side answer key (n2_questions is public-read under RLS).
+  // Server-side answer key + valid option ids (n2_questions is public-read).
   const { data: questions, error: qErr } = await supabase
     .from('n2_questions')
-    .select('id, correct_answer')
+    .select('id, correct_answer, options')
     .in('id', questionIds);
   if (qErr || !questions) {
     return NextResponse.json(
@@ -124,9 +124,24 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-  const answerKey = new Map<string, string>(
-    questions.map((q) => [q.id as string, String(q.correct_answer ?? '').toLowerCase()]),
-  );
+  const answerKey = new Map<string, string>();
+  const optionIds = new Map<string, Set<string>>();
+  for (const q of questions) {
+    answerKey.set(q.id as string, String(q.correct_answer ?? '').toLowerCase());
+    const opts = Array.isArray(q.options) ? (q.options as { id: string }[]) : [];
+    optionIds.set(q.id as string, new Set(opts.map((o) => String(o.id).toLowerCase())));
+  }
+
+  // Answer must be one of that question's actual option ids.
+  for (const qid of questionIds) {
+    const valid = optionIds.get(qid);
+    if (!valid || !valid.has(answers[qid].toLowerCase())) {
+      return NextResponse.json(
+        { error: `answer for question ${qid} is not one of its options` },
+        { status: 400 },
+      );
+    }
+  }
 
   const rows = questionIds.map((qid) => {
     const userAnswer = answers[qid].toLowerCase();
