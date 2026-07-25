@@ -45,7 +45,7 @@
 
 ## 2. Database schema (`n2_*` prefix)
 
-All tables prefixed `n2_` to coexist cleanly with Autriv + Forge tables in the shared ODIS Supabase.
+All tables prefixed `n2_` to coexist cleanly with Forge tables in the ODIS Supabase. (Corrected 2026-07-24: this DB is SEPARATE from Autriv's — Autriv is parked/archived and does NOT share this database.)
 
 ```sql
 -- ============================================================
@@ -570,7 +570,7 @@ export async function GET(request) {
 ## 10. Sources
 
 - Forge project: `~/projects/forge/` — `001_contact_submissions.sql` migration pattern, shared ODIS Supabase
-- ODIS shared Supabase: `https://ucppuzfyjrtcchdhwxto.supabase.co` (linked-project.json shows `Autriv-Prod` namespace)
+- ODIS Supabase: `https://ucppuzfyjrtcchdhwxto.supabase.co` (linked-project.json shows `Autriv-Prod` namespace) — ⚠️ CORRECTION 2026-07-24: per Jackson, n2 + Forge use a DIFFERENT Supabase DB than Autriv. This `Autriv-Prod` line is likely stale — verify n2's real linked project.
 - Forge's tech stack reference: `~/projects/forge/template/` (Next.js 15 + Tailwind v4 + Keystatic + Resend + Supabase)
 - Daily tool research: `2026-07-11_n2-daily-practice-tool-research.md`
 

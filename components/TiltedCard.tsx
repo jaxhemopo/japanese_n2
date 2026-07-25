@@ -30,17 +30,13 @@ export function TiltedCard({
   shadow = true,
   className,
 }: TiltedCardProps) {
-  const style: React.CSSProperties = {
-    transform: tilt === 0 ? 'none' : `rotate(${tilt}deg)`,
-  };
-
   const cardClass = ['tilted-card', shadow ? '' : 'tilted-card--no-shadow', className]
     .filter(Boolean)
     .join(' ');
 
   return (
     <div className="tilted-card-wrapper">
-      <div className={cardClass} style={style}>
+      <div className={cardClass} style={tilt !== 0 ? { transform: `rotate(${tilt}deg)` } : undefined}>
         {children}
       </div>
     </div>

@@ -40,6 +40,20 @@ export default async function LandingPage() {
     .eq('date', today)
     .maybeSingle();
 
+  // 2026-07-25 gap-killer (12:17 JST): fetch the most recent mock before
+  // today — feeds the "Last published: {date}" sub-line in the
+  // .card-status-empty callout when today's mock isn't published. Single
+  // indexed lookup on n2_mocks.date (date-typed, primary key) — cheap.
+  // null when no mock has ever been published (early-access window).
+  const { data: lastMockRow } = await supabase
+    .from('n2_mocks')
+    .select('date')
+    .lt('date', today)
+    .order('date', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const lastPublishedDate = lastMockRow?.date ?? null;
+
   // Compute issue ordinal from the mock's created_at timestamp.
   // PUBLICATION_START is the first mock date (2026-07-14); every day
   // after that is the next issue. Falls back to today's date string
@@ -72,35 +86,170 @@ export default async function LandingPage() {
         <header className="card-page-header">
           <StreakBadge count={streak} />
         </header>
-        <p className="card-tagline card-tagline--above">
-          for serious Japanese learners.
-        </p>
-        <h1 className="card-h1">
-          Today&rsquo;s N2
-          <br />
-          mock
-        </h1>
+        {/* 2026-07-25 gap-killer (06:39 JST): added card-h1-row + card-h1-aside
+            to the logged-in branch for H1 row balance. The logged-out branch
+            already wraps its H1 in <div className="card-h1-row"> with a
+            <aside className="card-h1-aside">est. 2026 / tokyo · jp</aside>
+            on the right side. The logged-in branch was missing both —
+            rendering the H1 as a left-aligned block with empty right-half
+            space above the phone mockup. Now uses the same idiom so the
+            H1 row reads as a balanced editorial composition across both
+            auth states. The aside content is locked (same line as the
+            logged-out branch) — the design.md §Landing per-page spec
+            doesn't mandate it but the cross-state parity is a visible
+            DNA miss. */}
+        <div className="card-h1-row">
+          <h1 className="card-h1">
+            Today&rsquo;s N2
+            <br />
+            mock
+          </h1>
+          <aside className="card-h1-aside">
+            Vol. I
+            <br />
+            est. 2026
+            <br />
+            tokyo · jp
+          </aside>
+        </div>
         <p className="card-h1-strapline">{straplineText}</p>
         <p className="card-lede">
           Good morning. Five questions across reading, grammar, and vocabulary.
         </p>
         {todayMock ? (
-          <Link href="/today" className="btn-primary">
-            Begin today&rsquo;s mock →
-          </Link>
+          <>
+            <Link href="/today" className="btn-primary">
+              Begin today&rsquo;s mock →
+            </Link>
+            {/* 2026-07-25 gap-killer (09:16 JST): added card-secondary
+                supporting sub-line to the logged-in branch for cross-state
+                structural parity with the logged-out branch (which has
+                "First time? Pick a password when you sign up — takes 12
+                seconds." under its CTA). The logged-in branch had no
+                supporting copy under its "Begin today's mock →" button —
+                logged-out users got an editorial aside about what to expect,
+                logged-in users got nothing. Copy: "Welcome back. Today's
+                mock is ready when you are." — same .card-secondary class
+                (sans 13 / #6F6D63) so no visual treatment change, just
+                cross-state structural parity. */}
+            <p className="card-secondary">
+              Welcome back. Today&rsquo;s mock is ready when you are.
+            </p>
+          </>
         ) : (
-          <p className="card-secondary">
-            Today&rsquo;s mock isn&rsquo;t published yet — check back at 07:30 JST.
-          </p>
+          /* 2026-07-25 gap-killer (12:17 JST): promoted the NoMockToday
+             status from .card-secondary (sans 13 / muted footnote) to
+             .card-status-empty (editorial-grade callout). The previous
+             .card-secondary treatment was a footnote for what is
+             actually the page's primary content in this state —
+             users saw a muted line under the H1 + lede and read it
+             as "this site is broken" rather than "today's mock is
+             in production". New callout carries a sans-uppercase
+             "Awaiting publication" kicker (in accent), serif italic
+             16px body explaining when to check back, and (when
+             available) a "Last published: {date}" sub-line for
+             context — same vocabulary as the .result-explanation /
+             .passage-quote / .editorial-hairline patterns already on
+             the card. Uses locked DNA tokens only (--surface-2,
+             --border, --accent, --text, --text-3, --font-sans,
+             --font-serif). */
+          <div className="card-status-empty">
+            <div className="card-status-empty__kicker">Awaiting publication</div>
+            <p className="card-status-empty__body">
+              Today&rsquo;s mock is in production — check back at 07:30 JST.
+            </p>
+            {lastPublishedDate && (
+              <div className="card-status-empty__sub">
+                Last published: {lastPublishedDate}
+              </div>
+            )}
+          </div>
         )}
-        <nav className="card-footer-nav">
-          <Link href="/progress" className="card-secondary">
-            Progress
-          </Link>
-          <Link href="/revision" className="card-secondary">
-            Revision
-          </Link>
-        </nav>
+        {/* 2026-07-25 gap-killer (06:39 JST): added the dense editorial
+            composition (preview list + colophon + colophon-flourish +
+            editorial-closing band) to the logged-in branch. The
+            logged-out branch already carries all four sections; the
+            logged-in branch was shipping only a thin 5-line card
+            (H1 / strapline / lede / CTA / footer nav), which made the
+            phone mockup dominate the right edge of the card and left
+            the right half visibly empty above the mockup. The four
+            editorial sections bring the logged-in card to the same
+            editorial depth as the logged-out card — the phone mockup
+            now overlaps the bottom-right of a dense card composition
+            rather than a thin placeholder card. The editorial-closing
+            nav row carries the Progress / Revision / Today's mock links
+            (replacing the previous minimal card-footer-nav that lacked
+            the editorial framing). Compose-copy: a small "Welcome back"
+            greeting in the editorial-closing line for the logged-in
+            state. Uses locked DNA tokens only — palette, type, and
+            component-class spec unchanged. */}
+        <section className="card-section card-section--flush" aria-label="What you&rsquo;ll see">
+          <div className="card-section-kicker">Daily coverage · Index</div>
+          <h2 className="card-section__heading card-h2">What you&rsquo;ll see</h2>
+          <ul className="landing-preview-list">
+            <li>
+              <span className="landing-preview-list__label">Reading</span>
+              <span className="landing-preview-list__note">short &amp; medium passages with timed questions</span>
+            </li>
+            <li>
+              <span className="landing-preview-list__label">Grammar</span>
+              <span className="landing-preview-list__note">sentence-completion in context</span>
+            </li>
+            <li>
+              <span className="landing-preview-list__label">Vocabulary</span>
+              <span className="landing-preview-list__note">context-driven word choices</span>
+            </li>
+            <li>
+              <span className="landing-preview-list__label">Kanji</span>
+              <span className="landing-preview-list__note">read &amp; recognize the ~1,000 N2 kanji</span>
+            </li>
+            <li>
+              <span className="landing-preview-list__label">Listening</span>
+              <span className="landing-preview-list__note">short audio clips with comprehension questions</span>
+            </li>
+          </ul>
+          <div className="landing-preview-list__meta">
+            ~7 minutes · 5 questions · scored instantly
+          </div>
+          <p className="landing-section-closing-note">
+            presented daily at 07:30 JST — by the editors
+          </p>
+        </section>
+
+        <section className="landing-colophon" aria-label="Publication facts">
+          <div className="landing-colophon__col">
+            <div className="landing-colophon__label">Published</div>
+            <div className="landing-colophon__meta">07:30 JST · 毎日</div>
+          </div>
+          <div className="landing-colophon__col">
+            <div className="landing-colophon__label">Level</div>
+            <div className="landing-colophon__meta">JLPT N2</div>
+          </div>
+          <div className="landing-colophon__col">
+            <div className="landing-colophon__label">Editor</div>
+            <div className="landing-colophon__meta">J. Tanaka · Tokyo</div>
+          </div>
+        </section>
+
+        <div className="landing-colophon-flourish" aria-hidden="true">
+          <span className="landing-colophon-flourish__rule" />
+          <span className="landing-colophon-flourish__label">colophon</span>
+          <span className="landing-colophon-flourish__rule" />
+        </div>
+
+        <div className="landing-editorial-closing">
+          <p className="landing-editorial-closing__line">
+            Welcome back — by the editors of N2 Daily Mock, Tokyo.
+          </p>
+          <nav className="landing-editorial-closing__nav" aria-label="Imprint">
+            <Link href="/progress">Progress</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/revision">Revision</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/today">Today&rsquo;s mock</Link>
+          </nav>
+        </div>
+
         <PhoneMockup />
       </TiltedCard>
     );
@@ -128,6 +277,8 @@ export default async function LandingPage() {
             below the H1, but the reference's overall composition has
             editorial substance throughout the upper viewport). */}
         <aside className="card-h1-aside">
+          Vol. I
+          <br />
           est. 2026
           <br />
           tokyo · jp

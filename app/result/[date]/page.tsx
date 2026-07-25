@@ -87,7 +87,7 @@ export default async function ResultPage({ params }: { params: { date: string } 
   }
 
   if (!data.mock) return <NoMockForDate date={date} />;
-  if (data.attempts.length === 0) return <NoAttemptYet date={date} />;
+  if (data.attempts.length === 0) return <NoAttemptYet date={date} streak={streak} />;
 
   const pct = data.total > 0 ? Math.round((data.score / data.total) * 100) : 0;
   const correctCount = data.attempts.filter((a) => a.is_correct).length;
@@ -260,17 +260,44 @@ function NoMockForDate({ date }: { date: string }) {
       <NavBar current="/result" />
       <h2 className="card-h2">モックが見つかりません</h2>
       <p className="card-lede">{date} の N2 モックはまだ公開されていません。</p>
+      {/* 2026-07-25 gap-killer: primary CTA + footer nav. The sub-state
+          previously had no navigation — users hitting this dead-end
+          had no way to recover. Primary CTA points to /today (where
+          the user can take today's mock or check the publication
+          status), and the footer nav provides a return path. */}
+      <Link href="/today" className="btn-primary">
+        今日のモックを確認 →
+      </Link>
+      <footer className="card-footer-nav card-footer-nav--end">
+        <Link href="/" className="card-meta-link card-secondary">← ホームに戻る</Link>
+      </footer>
     </TiltedCard>
   );
 }
 
-function NoAttemptYet({ date }: { date: string }) {
+function NoAttemptYet({ date, streak }: { date: string; streak: number }) {
   return (
     <TiltedCard>
       <IssueMeta />
       <NavBar current="/result" />
+      {/* 2026-07-25 gap-killer: StreakBadge + primary CTA + footer nav.
+          StreakBadge added for /result/[date] parity with the design.md
+          §Auth-gated page chrome spec ("Streak badge sits at the top-left
+          of the card body"). The primary CTA closes the previous
+          dead-end — the body copy literally said "下のボタンから受験して
+          ください" (use the button below) but no button was rendered.
+          Users now have a one-click path to take today's mock. */}
+      <header className="card-page-header">
+        <StreakBadge count={streak} />
+      </header>
       <h2 className="card-h2">{date} のモック</h2>
       <p className="card-lede">まだ提出していません。下のボタンから受験してください。</p>
+      <Link href="/today" className="btn-primary">
+        受験を始める →
+      </Link>
+      <footer className="card-footer-nav card-footer-nav--end">
+        <Link href="/" className="card-meta-link card-secondary">← ホームに戻る</Link>
+      </footer>
     </TiltedCard>
   );
 }
@@ -282,6 +309,13 @@ function ErrorState({ message }: { message: string }) {
       <NavBar current="/result" />
       <h2 className="card-h2">エラー</h2>
       <p className="card-lede">{message}</p>
+      {/* 2026-07-25 gap-killer: card-back-link (locked class) — the
+          sub-state previously had no recovery path. Same hairline-
+          divider + accent-link pattern used by /revision's empty-state
+          and /auth's footer link. No DNA drift; uses locked tokens. */}
+      <p className="card-back-link">
+        <Link href="/">← ホームに戻る</Link>
+      </p>
     </TiltedCard>
   );
 }

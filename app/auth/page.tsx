@@ -182,7 +182,7 @@ export default function AuthPage() {
         {/* Signup toggle removed 2026-07-24 — it hit /api/dev-signup
             without the required Bearer secret and 401'd every time.
             New accounts: Continue with Google above. */}
-        <p className="auth-toggle" style={{ cursor: 'default' }}>
+        <p className="auth-toggle auth-toggle--info">
           New here? Continue with Google above to create an account.
         </p>
       </form>

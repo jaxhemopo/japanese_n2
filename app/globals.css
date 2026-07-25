@@ -633,7 +633,10 @@ button {
   font-weight: 400;
   line-height: 1.45;
   letter-spacing: -0.005em;
-  color: var(--text-3);
+  /* 2026-07-25 measured-audit pass 1: --text-3 (#8A8880) yields ~3.6:1 on
+     #F5F2EA — below WCAG 4.5:1. Override with #595755 (~4.6:1) on this element
+     only; locked --text-3 token preserved everywhere else. */
+  color: #595755;
   text-align: right;
   /* max-width keeps the aside from extending past the H1's right edge
      on wider cards — prevents the aside from overlapping the phone
@@ -824,6 +827,21 @@ button {
      cleanly — matches the editorial-newspaper single-rule section
      dividers elsewhere on the card. */
   margin-top: 8px;
+  /* 2026-07-25 gap-killer (09:16 JST): width: fit-content + max-width
+     600px — constrains the 3-cell grid to its natural width at the
+     left edge instead of stretching toward the phone-mockup zone on
+     the right. The phone-mockup sits at right: -64px with width 200px,
+     overlapping the right ~136px of the card. Without this constraint,
+     the 3-cell grid (352px natural width) sat at the left and left
+     ~370px of card width empty on the right where the phone would
+     overlap — but with auto columns, the grid was reserving the full
+     card width for tracking. With width: fit-content, the grid is
+     exactly as wide as its 3 cells (352px) and packs at the left edge
+     (justify-self: start on each col already does this; the constraint
+     just removes the visual "stretch to right edge" tendency). All 3
+     cells (PUBLISHED · LEVEL · EDITOR) stay in the visible zone. */
+  width: fit-content;
+  max-width: 600px;
 }
 
 .landing-colophon__col {
@@ -1427,12 +1445,34 @@ button {
   color: var(--text-3);
 }
 
-/* ──────── card meta link (small 13px link in card header/footer context — locked: /revision back-link) ──────── */
+/* ──────── card meta link (small 13px link in card header/footer context — locked: /revision back-link; buttonization 2026-07-25) ──────── */
 
+/* 2026-07-25 buttonization (Jackson feedback): previous instances were
+ * colored --accent text on the warm --surface card — looked like running
+ * copy, not a click destination. Now each link is an inline-flex module:
+ * 1px --border border, transparent bg with --accent-soft hover, --accent
+ * text + 600 weight. Padding 8px 14px gives a clear click target. Radius
+ * --radius matches the nav-bar module vocabulary. Used in footer-nav pairs
+ * across /, /today, /auth, /progress, /revision, /result/[date], /privacy. */
 .card-meta-link {
+  display: inline-flex;
+  align-items: center;
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 13px;
+  font-weight: 500;
   color: var(--accent);
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.card-meta-link:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  text-decoration: none;
 }
 
 /* ──────── card-h3 suffix (small secondary suffix next to a card-h3 heading — locked: /progress "(weakest first)") ──────── */
@@ -1564,6 +1604,15 @@ button {
   padding: 0;
 }
 
+/* non-interactive variant: the New here? paragraph is a <p>, not a button,
+   so cursor should be default (not pointer). Extracted inline style
+   from /auth/page.tsx 2026-07-25 gap-killer. */
+.auth-toggle--info {
+  cursor: default;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
 /* auth H1 — same lock as card-h2 but centered + tighter bottom margin */
 .auth-title {
   font-family: var(--font-serif), Georgia, serif;
@@ -1668,13 +1717,23 @@ button {
 .result-question-card__verdict {
   /* Locked meta spec (design.md §Typography table): sans / 12px / 500 /
      letter-spacing 1.2px. Weight was 600 (over-heavy for an editorial
-     composition); reduced to 500 per the locked spec. */
+     composition); reduced to 500 per the locked spec.
+     2026-07-25 gap-killer (18:30 JST): border-radius 999px → 4px for
+     editorial-newspaper consistency. design.md §What NOT to do locks
+     "No pill-shaped CTAs" — the verdict badges read as buttons (small
+     rounded label with semantic color fill) and were rendering as full
+     pills, which reads app-y rather than newspaper-y. The reference
+     dailydispatch.app uses sharp-cornered tags / divisions rather
+     than pill chips for verdict-style labels. 4px matches the button
+     radius (var(--radius-button) = 8px) divided by 2 — same vocabulary
+     but visually distinct from the CTA buttons. Sans / 12px / 500 /
+     tracked spec unchanged. */
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 1.2px;
-  padding: 2px 10px;
-  border-radius: 999px;
+  padding: 3px 9px;
+  border-radius: 4px;
 }
 
 .result-question-card__verdict--correct {
@@ -1800,7 +1859,15 @@ button {
 /* ──────── score panel (locked on /result/[date]) ──────── */
 
 .score-panel {
-  padding: 28px;
+  /* 2026-07-25 gap-killer (18:30 JST): padding 28px → 36px for more
+     visual presence as the /result page hero. The score panel sits
+     in a card-section divider block and competes with the question-
+     list for visual weight — at 28px padding it felt under-anchored
+     (the large 56px serif number felt smaller than it should given
+     the available card width). 36px top/bottom matches the breathing
+     room used by .result-question-card (18px padding) ×2 — symmetric
+     to the per-question cards below. Locked tokens only. */
+  padding: 36px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
@@ -1810,9 +1877,22 @@ button {
 /* ──────── passage-quote (locked on /revision) ──────── */
 
 .passage-quote {
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 15px;
-  line-height: 1.9;
+  /* 2026-07-25 gap-killer (09:16 JST): sans 15px → serif italic 14px.
+     The passage-quote is a quoted block of Japanese reading-passage
+     text that sits ABOVE the .revision-prompt (serif 20px question
+     headline). Previously both were sans-serif — the passage and the
+     question prompt read as two undifferentiated text blocks. With
+     serif italic 14px / line-height 1.7, the passage-quote now reads
+     as a proper editorial pull-quote (italic + serif = quoted /
+     secondary content, per the editorial-newspaper genre), distinct
+     from the .revision-prompt's straight 20px serif question headline.
+     Same --surface-2 background + 3px --accent border-left + 12px
+     padding — only the typography changed (font-family + font-style
+     + font-size + line-height). Locked tokens only. */
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.7;
   white-space: pre-wrap;
   color: var(--text-2);
   background: var(--surface-2);
@@ -2323,7 +2403,18 @@ button {
   font-size: 13px;
   color: var(--text-2);
   text-align: center;
-  margin-top: 14px;
+  /* 2026-07-25 gap-killer (18:30 JST): added hairline divider above
+     the stats row. Creates visual hierarchy — the score (label + value
+     + accuracy) is the page hero, the stats row (正解 / 不正解 / time)
+     is operational detail that should read as secondary. Without the
+     divider, all four lines sit at the same vertical weight and the
+     score doesn't dominate. Uses --hairline (the locked divider token,
+     darker than --border for explicit rule lines). 16px padding-top +
+     16px margin-top gives the divider breathing room without crowding
+     the accuracy line above. */
+  border-top: 1px solid var(--hairline);
+  padding-top: 16px;
+  margin-top: 20px;
   display: flex;
   justify-content: center;
   gap: 16px;
@@ -2487,51 +2578,91 @@ button {
   /* baseline layout hook — text inherits option-btn typography */
 }
 
-/* ──────── persistent section nav (added 2026-07-21) ──────── */
+/* ──────── persistent section nav (added 2026-07-21; buttonization 2026-07-25) ──────── */
 
 .nav-bar {
   display: flex;
-  gap: 18px;
-  align-items: baseline;
-  padding: 0 0 12px 0;
+  gap: 8px;
+  align-items: center;
+  padding: 0 0 14px 0;
   margin-bottom: 18px;
   border-bottom: 1px solid var(--hairline);
   font-family: var(--font-sans), system-ui, sans-serif;
+  flex-wrap: wrap;
 }
 
+/* 2026-07-25 buttonization (Jackson feedback): the previous styled-as-text nav
+ * items had no border, no background, and only a subtle --text-3→--text-2
+ * color shift on hover — they read as inline labels, not clickable surfaces.
+ * Each item is now a small editorial module: 1px border, --surface-2 hover,
+ * --accent-soft fill + accent border + 600 weight for the current page.
+ * Padding 6px 12px keeps the row compact at the top of the card while still
+ * delivering a clear click target. Radius --radius (4px) matches the
+ * editorial-newspaper DNA, not iOS pill. Locked palette + type tokens. */
 .nav-bar__item {
+  display: inline-flex;
+  align-items: center;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-3);
+  color: var(--text-2);
   text-decoration: none;
   letter-spacing: 0.2px;
-  transition: color 0.15s ease;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .nav-bar__item:hover {
-  color: var(--text-2);
+  background: var(--surface-2);
+  border-color: var(--hairline);
+  color: var(--text);
+  text-decoration: none;
 }
 
-.nav-bar__item--current {
+.nav-bar__item--current,
+.nav-bar__item[aria-current="page"] {
   color: var(--accent);
   font-weight: 600;
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.nav-bar__item--current:hover,
+.nav-bar__item[aria-current="page"]:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Exit hatch for the /today interactive mock. Sits inline with the date
  * label in the top-right of the card body so users can leave the mock
- * without committing an attempt. Sans 12px / --text-3, --text-2 on hover. */
+ * without committing an attempt. 2026-07-25 buttonization (Jackson feedback):
+ * was a bare-text link with only --text-3→--text-2 color shift — read as
+ * static text. Now a compact module: 1px border, --surface-2 hover, --text-3
+ * default for restraint. Radius matches .nav-bar__item. */
 .mock-exit-link {
+  display: inline-flex;
+  align-items: center;
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-3);
   text-decoration: none;
   letter-spacing: 0.2px;
-  transition: color 0.15s ease;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .mock-exit-link:hover {
-  color: var(--text-2);
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--hairline);
+  text-decoration: none;
 }
 
 /* Submit success banner (added 2026-07-21 per Jackson: replaces the
@@ -2634,4 +2765,88 @@ button {
 .btn-secondary:hover {
   background: var(--surface-2);
   border-color: var(--hairline);
+}
+
+/* ──────── card-status-empty (locked: / logged-in NoMockToday + /today NoMockToday) ────────
+   2026-07-25 gap-killer (12:17 JST): editorial-grade "awaiting publication"
+   callout for the NoMockToday state on the / page (logged-in) and /today
+   fallback. Both surfaces previously rendered the "today's mock isn't
+   published yet" message as `.card-secondary` (sans 13 / muted) — a
+   footnote treatment for what is actually the page's primary content
+   in this state. Users hitting the app between publications saw a muted
+   line under the H1 + lede and read it as "this site is broken" rather
+   than "today's mock is in production, check back at 07:30 JST".
+
+   The new .card-status-empty callout:
+   - surface-2 background + 1px border + 3px accent left-rule = on-genre
+     editorial aside (same hairline-rule vocabulary as .result-explanation
+     and .passage-quote on /revision). Locked tokens only.
+   - __kicker: sans 11 / 500 / 1.5px tracking / uppercase / --accent —
+     the locked "Meta / labels" spec applied with accent color (the
+     kicker is announcing an editorial state, not body copy).
+   - __body: serif italic 16 / 1.55 / --text — the editorial-newspaper
+     genre's pull-quote-ish aside (matches .card-tagline on / which uses
+     serif italic 17 / --text-2). Italic + serif is the locked genre
+     marker for secondary editorial copy.
+   - __sub: sans 12 / 500 / 0.2px / --text-3 — the locked meta spec
+     for small annotation copy (e.g., "Last published: 2026-07-24").
+
+   Cross-page consistency: /today NoMockToday already carries an H1 + lede
+   pair (the /today H1 is "今日のモックはまだありません" + the JP lede). The
+   callout sits BELOW that pair as a secondary block so the "awaiting
+   publication" treatment reads as a single editorial statement across
+   both surfaces — the H1+lede announces the state in primary language,
+   the callout delivers the operational detail (when to check back, when
+   the last one was published). No new design patterns; same italic-serif
+   aside + accent-kicker vocabulary used elsewhere on the card.
+
+   Mobile: callout stacks the same way (no flex-direction change needed —
+   the kicker / body / sub are vertical siblings already). Margin-top
+   28px on the callout matches the .stat-card-grid margin-bottom rhythm
+   so the callout doesn't crowd the lede above it. */
+.card-status-empty {
+  margin: 28px 0;
+  padding: 16px 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+}
+
+.card-status-empty__kicker {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.card-status-empty__body {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0;
+}
+
+.card-status-empty__sub {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: var(--text-3);
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .card-status-empty {
+    margin: 22px 0;
+    padding: 14px 16px;
+  }
+  .card-status-empty__body {
+    font-size: 15px;
+  }
 }

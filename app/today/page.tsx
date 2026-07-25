@@ -140,6 +140,35 @@ function NoMockToday({ date, streak }: { date: string; streak: number }) {
         {date} の N2 モックはまだ公開されていません。
         07:30 JST 以降にもう一度ご確認ください。
       </p>
+      {/* 2026-07-25 gap-killer (12:17 JST): cross-page consistency —
+         added the same .card-status-empty editorial-grade callout used
+         on / logged-in NoMockToday. The /today H1+lede pair announces
+         the state in primary language; the callout below delivers the
+         operational detail with a sans-uppercase-tracked "Awaiting
+         publication" kicker (in accent) + serif italic body. Same
+         vocabulary as .result-explanation / .passage-quote on the card
+         (surface-2 background + 3px accent left-rule). The /today
+         NoMockToday previously relied on the H1+lede pair alone; the
+         callout now visually pairs with the / logged-in branch's
+         NoMockToday callout so both surfaces render the same
+         "awaiting publication" treatment. Uses locked tokens only. */}
+      <div className="card-status-empty">
+        <div className="card-status-empty__kicker">Awaiting publication</div>
+        <p className="card-status-empty__body">
+          本日のモックは準備中です — 07:30 JST 以降に再度ご確認ください。
+        </p>
+      </div>
+      {/* 2026-07-25 gap-killer: italic serif closing note before the
+          footer nav. Mirrors the / logged-out's landing-section-closing-
+          note ("presented daily at 07:30 JST — by the editors") pattern
+          — italic-serif aside that closes the page body with a small
+          editorial note. Closes the visible ~80px empty space between
+          the lede and the footer nav that was visible on desktop. Uses
+          locked tokens only (--font-serif, --text-3). Same class
+          already in globals.css from prior passes. */}
+      <p className="landing-section-closing-note">
+        公開までしばらくお待ちください — 編集チームより
+      </p>
       {/* 2026-07-23 gap-killer: card-footer-nav added for structural
           parity with /progress and /revision. NoMockToday previously
           had no footer affordance — other auth-gated empty-state pages
