@@ -53,12 +53,18 @@ const notoSerifJP = Noto_Serif_JP({
   display: 'swap',
 });
 
-// --font-serif-jp is aliased to --font-serif via an inline custom property
-// on <html> (see below). 2026-07-24: the previous second Noto_Serif_JP()
-// instance was byte-identical to notoSerifJP (same family/subset/weights,
-// different CSS variable only) — next/font instantiated and shipped the
-// same font twice, undercutting the 2026-07-23 "halve the font payload"
-// pass. One instance, two variable names, zero visual change.
+// CJK serif — same Noto Serif JP family, used as --font-serif-jp token for
+// components that explicitly need the CJK variant (most pages use --font-serif).
+// 2026-07-23 measured-audit: dropped from 3 families (Noto Sans JP + Source Serif 4
+// + Noto Serif JP) to 2 (Noto Sans JP + Noto Serif JP) to eliminate one Google
+// Fonts CSS payload. Source Serif 4's Latin-only advantage is moot when Noto Serif
+// JP Latin subset covers the same characters at comparable file size.
+const notoSerifJPCJK = Noto_Serif_JP({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-serif-jp',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -87,18 +93,11 @@ export default async function RootLayout({
   const fontClass = [
     notoSansJP.variable,
     notoSerifJP.variable,
+    notoSerifJPCJK.variable,
   ].join(' ');
 
   return (
-    <html
-      lang="ja"
-      dir="ltr"
-      className={fontClass}
-      // Alias the legacy --font-serif-jp token to --font-serif so every
-      // component that still references it keeps working without loading
-      // the same font a second time.
-      style={{ ['--font-serif-jp' as string]: 'var(--font-serif)' } as React.CSSProperties}
-    >
+    <html lang="ja" dir="ltr" className={fontClass}>
       <head>
         {/* Preconnect to Supabase — saves ~200-400ms on every server response by
            establishing the TCP/TLS connection before the auth session request fires.
