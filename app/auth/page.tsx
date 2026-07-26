@@ -187,11 +187,11 @@ export default function AuthPage() {
         </p>
       </form>
 
-      <p className="auth-footer-link">
-        <Link href="/">← ホームに戻る</Link>
-        {' · '}
-        <Link href="/privacy">Privacy</Link>
-      </p>
+      <footer className="auth-footer-link">
+        <Link href="/" className="card-secondary">← ホームに戻る</Link>
+        <span aria-hidden="true">·</span>
+        <Link href="/privacy" className="card-secondary">Privacy</Link>
+      </footer>
 
       {/* 2026-07-23 gap-killer: italic-serif editorial closing
           credit + tracked-sans colophon print fills the visible

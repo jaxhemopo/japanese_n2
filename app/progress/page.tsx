@@ -132,7 +132,7 @@ export default async function ProgressPage() {
           By question type {subtypeRows.length > 0 && <span className="card-h3__suffix">(weakest first)</span>}
         </h3>
         {subtypeRows.length === 0 ? (
-          <p className="card-empty">No attempts yet — take today&rsquo;s mock to start building stats.</p>
+          <p className="card-empty">No attempts yet — <Link href="/today">take today&rsquo;s mock</Link> to start building stats.</p>
         ) : (
           <div className="subtype-list">
             {subtypeRows.map((row) => (

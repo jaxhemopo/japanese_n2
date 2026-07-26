@@ -133,9 +133,9 @@ function NoMockToday({ date, streak }: { date: string; streak: number }) {
       <header className="card-page-header">
         <StreakBadge count={streak} />
       </header>
-      <h1 className="card-h1 card-h1--jp card-heading-with-lede">
+      <h2 className="card-h2 card-heading-with-lede">
         今日のモックはまだありません
-      </h1>
+      </h2>
       <p className="card-lede">
         {date} の N2 モックはまだ公開されていません。
         07:30 JST 以降にもう一度ご確認ください。

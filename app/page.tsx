@@ -83,7 +83,7 @@ export default async function LandingPage() {
       <TiltedCard>
         <IssueMeta />
         <NavBar current="/" />
-        <header className="card-page-header">
+        <header className="card-page-header card-page-header--bare">
           <StreakBadge count={streak} />
         </header>
         {/* 2026-07-25 gap-killer (06:39 JST): added card-h1-row + card-h1-aside

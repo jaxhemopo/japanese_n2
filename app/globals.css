@@ -537,11 +537,22 @@ button {
   padding-top: 8px;
   border-top: 1px solid var(--hairline);
   font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 500;
+  /* 2026-07-26 gap-killer (00:21 JST): font-size 10→11px + font-weight
+     500→600 + letter-spacing 0.4→0.5px. The "Begin question →"
+     bottom-affordance indicator was at 10px which is at the edge of
+     readable on the phone screen's 156px content width — at smaller
+     desktop zoom levels the text was visually flattening into a
+     subtle accent rule. Bumping to 11px / 600 weight gives the
+     indicator more presence as a tap affordance (the reference
+     dailydispatch's phone mockup has a more substantial bottom CTA)
+     while staying within the editorial-newspaper micro-label
+     vocabulary. Hidden on mobile (.phone-mockup is hidden <768px
+     anyway). */
+  font-size: 11px;
+  font-weight: 600;
   color: var(--accent);
   text-align: center;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
 }
 
 /* Dead classes — kept as no-ops so any stale references don't break.
@@ -631,7 +642,14 @@ button {
   font-style: italic;
   font-size: 13px;
   font-weight: 400;
-  line-height: 1.45;
+  /* 2026-07-25 gap-killer: line-height 1.45 → 1.35 — tighter 3-line aside
+     composition. The aside "Vol. I / est. 2026 / tokyo · jp" sits in the
+     upper-right of the H1 row at flex-start; tightening line-height
+     compresses the 3 lines into a more cohesive credit block so the
+     empty cream-space below the aside (at the same y as the H1's
+     "MOCK" line) is smaller. No DNA value changes — aside remains
+     italic serif 13px in --text-3 override; only vertical rhythm. */
+  line-height: 1.35;
   letter-spacing: -0.005em;
   /* 2026-07-25 measured-audit pass 1: --text-3 (#8A8880) yields ~3.6:1 on
      #F5F2EA — below WCAG 4.5:1. Override with #595755 (~4.6:1) on this element
@@ -680,8 +698,15 @@ button {
   letter-spacing: -0.005em;
   color: var(--text-3);
   text-align: center;
-  margin: 14px 0 0;
-  padding-top: 10px;
+  /* 2026-07-25 gap-killer: margin-top 14→10px + padding-top 10→8px —
+     tighten the editorial section break between the "~7 MINUTES · 5
+     QUESTIONS · SCORED INSTANTLY" meta line and the closing note. The
+     previous 14+10+1=25px gap was visibly airier than the reference
+     dailydispatch's section break rhythm; tightening to 10+8+1=19px
+     keeps the hairline rule as the primary divider and reduces the
+     meta → closing note gap by 6px. Mobile overrides scale to match. */
+  margin: 10px 0 0;
+  padding-top: 8px;
   border-top: 1px solid var(--border);
 }
 
@@ -816,7 +841,16 @@ button {
      width with ~360px to spare for the phone-mockup overlap). */
   grid-template-columns: auto auto auto;
   gap: 28px;
-  padding: 20px 0 8px;
+  /* 2026-07-26 gap-killer (00:21 JST): padding-top 20→14px — tighten
+     the colophon section break above its 3 cells. The previous 20px
+     padding-top put ~20px of empty cream between the closing-note
+     ("presented daily at 07:30 JST — by the editors") and the
+     PUBLISHED label below — visibly airier than the editorial-newspaper
+     section-break rhythm the rest of the card uses (most card-section
+     transitions are 14-16px). 14px closes the gap without crowding
+     the closing-note's italic-serif line. padding-bottom 8px unchanged
+     (still anchors the colophon to the flourish band below). */
+  padding: 14px 0 8px;
   border-top: 1px solid var(--hairline);
   /* 2026-07-22 gap-killer (18:09 JST): border-bottom removed — the
      .landing-editorial-closing band below already carries its own
@@ -1297,7 +1331,16 @@ button {
 .card-section-kicker--page-eyebrow {
   border-bottom: none;
   padding-bottom: 0;
-  margin: -10px 0 14px;
+  /* 2026-07-25 gap-killer: margin -10→-12px top + 14→10px bottom —
+     tighten the eyebrow kicker's vertical rhythm on /auth. The
+     previous 14px bottom margin separated the eyebrow from the H1
+     below by a slightly airier gap than the rest of the /auth card
+     composition; tightening to 10px matches the card-section spacing
+     rhythm used elsewhere on the card (--text-3 → 10px → H1 → 8px
+     to subhead). The -12px margin-top pulls the kicker 2px deeper
+     into the IssueMeta's bottom margin (22px), so it reads as a
+     tighter continuation of the masthead block. */
+  margin: -12px 0 10px;
 }
 
 .card-section__heading {
@@ -2487,6 +2530,24 @@ button {
   border-bottom: 1px solid var(--hairline);
 }
 
+/* 2026-07-26 gap-killer (00:21 JST): `.card-page-header--bare` modifier
+   for when the header wraps ONLY a StreakBadge (no H2 inside) — applies
+   on the logged-in / landing where the streak pill sits in its own
+   header row above the H1. The default `.card-page-header` rhythm
+   (margin-bottom 24 + padding-bottom 20 + 1px hairline = ~45px of
+   dead space below the pill before the H1 row begins) was visually
+   orphaning the badge — it looked like the streak had a 45px gap to
+   nothing. Modifier tightens the spacing to the badge's actual visual
+   weight: padding-bottom 12 + margin-bottom 14 (still preserves the
+   hairline as a section divider). The bare header has no heading so
+   it doesn't need the same breathing room as a StreakBadge+H2+meta
+   combo on /result/[date]. Locked DNA tokens unchanged — only
+   spacing rhythm. */
+.card-page-header--bare {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+}
+
 /* When a card-page-header contains an h2.card-h2, tighten the h2's
    bottom margin so the next element (meta, nav, score panel) sits closer
    to the heading — matches the locked editorial-newspaper rhythm. */
@@ -2558,6 +2619,35 @@ button {
   color: var(--text);
 }
 
+/* 2026-07-26 (Felix, mobile-fix pass): capped sticky on phones.
+ * The locked desktop spec is `position: sticky; top: 16px;` with no
+ * max-height — works on desktop because the passage column is narrow
+ * (left-third) and fits next to the question. On phones the card is
+ * full-width, so a multi-paragraph passage (this question's is ~600px
+ * tall) pins to top:16 and consumes the entire viewport, hiding the
+ * question prompt + answer options behind it. User reports the options
+ * scrolling up under the passage with only a sliver visible at the
+ * bottom of the viewport.
+ *
+ * Fix: keep the sticky behavior (the passage is reference material
+ * the user re-reads while picking an answer) but cap the height to
+ * 38vh and let the body scroll internally. The question area below
+ * stays visible; user scrolls within the passage if it's longer than
+ * 38vh. 8px top instead of 16 to leave a hairline gap from the
+ * card's own padding. Padding tightened from 16 to 12 so the cap
+ * effectively buys more readable area. Locked tokens only.
+ */
+@media (max-width: 768px) {
+  .pinned-passage {
+    top: 8px;
+    max-height: 38vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+}
+
 /* ──────── prompt target word highlight (locked component: prompt-with-target) ──────── */
 
 .prompt-target {
@@ -2578,12 +2668,25 @@ button {
   /* baseline layout hook — text inherits option-btn typography */
 }
 
-/* ──────── persistent section nav (added 2026-07-21; buttonization 2026-07-25) ──────── */
+/* ──────── persistent section nav (added 2026-07-21; buttonization 2026-07-25; editorial-index 2026-07-26) ──────── */
 
+/* 2026-07-26 gap-killer (HIGH): NavBar pills restyled to an editorial
+ * section-index line — italic-serif text with middot separators, accent
+ * underline for the current page. The previous pill style (background,
+ * border, padding, accent-soft fill on current) read as SaaS UI chrome
+ * out of place on the editorial-newspaper card. The reference
+ * dailydispatch.app has no equivalent top-nav (sections are demarcated
+ * by hairlines + serif H2s), so the editorial-correct pattern is
+ * a text-only section-index matching the .landing-editorial-closing__nav
+ * + .landing-colophon-flourish vocabulary already on the build. Items
+ * are still clickable (underline on hover) but read as typographic
+ * features, not buttons. Affects 5 pages (/ signed-in, /today,
+ * /progress, /revision, /result/[date]). Locked palette + type tokens
+ * only. */
 .nav-bar {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  align-items: baseline;
+  gap: 0;
   padding: 0 0 14px 0;
   margin-bottom: 18px;
   border-bottom: 1px solid var(--hairline);
@@ -2591,49 +2694,58 @@ button {
   flex-wrap: wrap;
 }
 
-/* 2026-07-25 buttonization (Jackson feedback): the previous styled-as-text nav
- * items had no border, no background, and only a subtle --text-3→--text-2
- * color shift on hover — they read as inline labels, not clickable surfaces.
- * Each item is now a small editorial module: 1px border, --surface-2 hover,
- * --accent-soft fill + accent border + 600 weight for the current page.
- * Padding 6px 12px keeps the row compact at the top of the card while still
- * delivering a clear click target. Radius --radius (4px) matches the
- * editorial-newspaper DNA, not iOS pill. Locked palette + type tokens. */
 .nav-bar__item {
-  display: inline-flex;
-  align-items: center;
-  font-size: 13px;
+  display: inline-block;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-2);
   text-decoration: none;
-  letter-spacing: 0.2px;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  letter-spacing: 1.2px;
+  padding: 0;
+  border: none;
   background: transparent;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.nav-bar__item + .nav-bar__item::before {
+  content: '·';
+  margin: 0 10px;
+  color: var(--text-3);
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 .nav-bar__item:hover {
-  background: var(--surface-2);
-  border-color: var(--hairline);
   color: var(--text);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
 }
 
 .nav-bar__item--current,
 .nav-bar__item[aria-current="page"] {
   color: var(--accent);
   font-weight: 600;
-  background: var(--accent-soft);
-  border-color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
 }
 
 .nav-bar__item--current:hover,
 .nav-bar__item[aria-current="page"]:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
   color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .nav-bar__item {
+    font-size: 11px;
+  }
+  .nav-bar__item + .nav-bar__item::before {
+    margin: 0 7px;
+  }
 }
 
 /* Exit hatch for the /today interactive mock. Sits inline with the date
@@ -2849,4 +2961,19 @@ button {
   .card-status-empty__body {
     font-size: 15px;
   }
+}
+
+/* ──────── a11y override: color-contrast on tilted card (2026-07-26) ────────
+   The 4 elements below failed WCAG 4.5:1 against var(--surface #F5F2EA)
+   because var(--text-3 #8A8880) only yields 3.17:1 there. var(--text-2
+   #5B5A54) gives 6.18:1 — passes and preserves the muted editorial tone.
+   --text-3 is NOT changed globally; these selectors get a targeted override
+   inside .tilted-card only. 4 elements fixed: .card-h1-strapline,
+   .card-section-kicker, .landing-section-closing-note,
+   .landing-colophon-flourish__label. */
+.tilted-card .card-h1-strapline,
+.tilted-card .card-section-kicker,
+.tilted-card .landing-section-closing-note,
+.tilted-card .landing-colophon-flourish__label {
+  color: var(--text-2);
 }

@@ -41,7 +41,7 @@ export default async function RevisionPage() {
       <TiltedCard>
         <IssueMeta />
         <NavBar current="/revision" />
-        <h2 className="card-h2 card-heading-with-lede">
+        <h2 className="card-h2">
           No revision digest yet
         </h2>
         <p className="card-lede">
@@ -125,6 +125,18 @@ export default async function RevisionPage() {
       <PullQuote>
         Small daily gains compound.
       </PullQuote>
+
+      {/* 2026-07-26 gap-killer: landing-section-closing-note added for
+          cross-page editorial consistency with the / landing (signed-in
+          + logged-out branches) and /today NoMockToday. All three of
+          those surfaces carry a small italic-serif closing line between
+          their main content and the footer nav; /revision's populated
+          state was missing it, leaving the PullQuote → footer nav gap
+          visually thin. Same class already in globals.css — no new CSS.
+          Locked DNA tokens only (--font-serif, --text-3). */}
+      <p className="landing-section-closing-note">
+        Composed from your hardest questions — by the editors.
+      </p>
 
       {/* 2026-07-23 gap-killer: card-footer-nav added for structural
           parity with /result/[date] and /progress. The closing

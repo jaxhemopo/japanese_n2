@@ -86,7 +86,13 @@ export default async function ResultPage({ params }: { params: { date: string } 
     return <ErrorState message={`結果の取得に失敗しました: ${message}`} />;
   }
 
-  if (!data.mock) return <NoMockForDate date={date} />;
+  // 2026-07-26 gap-killer: NoMockForDate — passes streak for StreakBadge
+  // chrome parity with NoAttemptYet. design.md §Per-page /result
+  // mandates StreakBadge at top-left for the populated state; the
+  // sub-states were inconsistent — NoAttemptYet had it, NoMockForDate
+  // didn't. Streak is already computed above and is the same value
+  // the NoAttemptYet branch receives.
+  if (!data.mock) return <NoMockForDate date={date} streak={streak} />;
   if (data.attempts.length === 0) return <NoAttemptYet date={date} streak={streak} />;
 
   const pct = data.total > 0 ? Math.round((data.score / data.total) * 100) : 0;
@@ -150,7 +156,7 @@ export default async function ResultPage({ params }: { params: { date: string } 
         {data.attempts.map((a, i) => (
           <li key={a.question_id} className="result-question-card">
             <div className="result-question-card__header">
-              <span className="result-question-card__num">問 {i + 1}</span>
+              <h3 className="result-question-card__num">問 {i + 1}</h3>
               <span
                 className={
                   'result-question-card__verdict ' +
@@ -170,6 +176,15 @@ export default async function ResultPage({ params }: { params: { date: string } 
       <PullQuote>
         Progress has always belonged to the informed. Not the fastest, but the most astute.
       </PullQuote>
+
+      {/* 2026-07-26 gap-killer: landing-section-closing-note added for
+          cross-page editorial consistency with the / landing (signed-in
+          + logged-out branches) and /today NoMockToday. /result/[date]
+          populated state was missing it. Same class already in
+          globals.css. Locked DNA tokens only. */}
+      <p className="landing-section-closing-note">
+        Recorded for the record — by the editors.
+      </p>
 
       <footer className="card-footer-nav card-footer-nav--between">
         <Link href="/" className="card-meta-link card-secondary">← ホームに戻る</Link>
@@ -253,11 +268,20 @@ function MissingQuestionRow() {
   return <div className="result-missing-note">問題データを取得できませんでした。</div>;
 }
 
-function NoMockForDate({ date }: { date: string }) {
+function NoMockForDate({ date, streak }: { date: string; streak: number }) {
   return (
     <TiltedCard>
       <IssueMeta />
       <NavBar current="/result" />
+      {/* 2026-07-26 gap-killer: StreakBadge added for chrome parity
+          with NoAttemptYet. design.md §Per-page /result locks the
+          StreakBadge at the top-left of the card body; the sub-states
+          should be consistent (NoAttemptYet already had it; NoMockForDate
+          didn't). Streak prop is passed from the parent — no extra
+          computeStreak call needed. */}
+      <header className="card-page-header">
+        <StreakBadge count={streak} />
+      </header>
       <h2 className="card-h2">モックが見つかりません</h2>
       <p className="card-lede">{date} の N2 モックはまだ公開されていません。</p>
       {/* 2026-07-25 gap-killer: primary CTA + footer nav. The sub-state
