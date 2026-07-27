@@ -282,6 +282,19 @@ function NoMockForDate({ date, streak }: { date: string; streak: number }) {
       <header className="card-page-header">
         <StreakBadge count={streak} />
       </header>
+      {/* 2026-07-27 gap-killer: card-section-kicker meta line above the
+         H2 for cross-page parity with /today NoMockToday ("Today ·
+         {date} · Not yet published") and /progress / /revision which
+         both carry a sans-uppercase-tracked meta line directly below
+         the page-level H2. /result/[date]'s sub-states previously
+         jumped from StreakBadge → H2 with no editorial subhead,
+         breaking the rhythm across auth-gated pages. Sans 11px / 500 /
+         tracked / uppercase / --text-3 — same vocabulary as the other
+         auth-gated kickers, slightly tighter since this is a state
+         callout. Locked tokens only. */}
+      <p className="card-section-kicker">
+        {date} · No mock published
+      </p>
       <h2 className="card-h2">モックが見つかりません</h2>
       <p className="card-lede">{date} の N2 モックはまだ公開されていません。</p>
       {/* 2026-07-25 gap-killer: primary CTA + footer nav. The sub-state
@@ -314,6 +327,12 @@ function NoAttemptYet({ date, streak }: { date: string; streak: number }) {
       <header className="card-page-header">
         <StreakBadge count={streak} />
       </header>
+      {/* 2026-07-27 gap-killer: card-section-kicker meta line — same
+         cross-page parity fix as NoMockForDate above. Sans 11px /
+         tracked / uppercase / --text-3. Locked tokens only. */}
+      <p className="card-section-kicker">
+        {date} · Not yet attempted
+      </p>
       <h2 className="card-h2">{date} のモック</h2>
       <p className="card-lede">まだ提出していません。下のボタンから受験してください。</p>
       <Link href="/today" className="btn-primary">

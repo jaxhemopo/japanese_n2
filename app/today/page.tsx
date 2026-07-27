@@ -133,6 +133,20 @@ function NoMockToday({ date, streak }: { date: string; streak: number }) {
       <header className="card-page-header">
         <StreakBadge count={streak} />
       </header>
+      {/* 2026-07-27 gap-killer: meta-kicker above the H2 — parity with
+          /progress's "Across all attempts · Weighted by recency" and
+          /revision's date-window meta. Sibling auth-gated pages all
+          carry a sans-uppercase-tracked editorial subhead directly
+          above the H2; /today NoMockToday previously jumped from the
+          streak badge straight into the H2, breaking the editorial
+          rhythm across the three pages. Sans 11px / 500 / tracked /
+          uppercase / --text-3 — same DNA as .progress-meta /
+          .revision-meta (sans 12px / 500 / 1.2px tracked / uppercase /
+          --text-3), slightly tighter since this is a state callout
+          not a section break. No new tokens. */}
+      <p className="card-section-kicker">
+        Today · {date} · Not yet published
+      </p>
       <h2 className="card-h2 card-heading-with-lede">
         今日のモックはまだありません
       </h2>
@@ -169,6 +183,48 @@ function NoMockToday({ date, streak }: { date: string; streak: number }) {
       <p className="landing-section-closing-note">
         公開までしばらくお待ちください — 編集チームより
       </p>
+      {/* 2026-07-27 gap-killer: editorial "Today's mock — at 07:30 JST"
+          preview block below the closing note. Mirrors the / landing's
+          "What you'll see" section (added 2026-07-19 20:07) so the
+          /today NoMockToday has the same compositional density as /
+          — single-section auth-gated pages previously read as
+          half-empty compared to the multi-section landing. The 3-row
+          preview (Reading / Grammar / Vocabulary) reuses the locked
+          .card-section + .landing-preview-list pattern with the
+          #1/#2/#3 serif accent counter prefix from .landing-preview-
+          list__label::before. The closing meta line ("Published daily
+          · 07:30 JST · 5 questions · 3 categories") reuses .landing-
+          preview-list__meta. No new CSS classes. --card-section--flush
+          keeps the bottom hairline from double-printing against the
+          footer-nav's own border-top. */}
+      <div className="card-section card-section--flush">
+        <h3 className="card-section__heading card-h3">
+          Today&rsquo;s mock &mdash; at 07:30 JST
+        </h3>
+        <ul className="landing-preview-list">
+          <li>
+            <span className="landing-preview-list__label">Reading</span>
+            <span className="landing-preview-list__note">
+              long-form passages, integrated comprehension
+            </span>
+          </li>
+          <li>
+            <span className="landing-preview-list__label">Grammar</span>
+            <span className="landing-preview-list__note">
+              sentence-order, text-grammar, grammar patterns
+            </span>
+          </li>
+          <li>
+            <span className="landing-preview-list__label">Vocabulary</span>
+            <span className="landing-preview-list__note">
+              word-formation synonyms, contextual usage
+            </span>
+          </li>
+        </ul>
+        <p className="landing-preview-list__meta">
+          Published daily &middot; 07:30 JST &middot; 5 questions &middot; 3 categories
+        </p>
+      </div>
       {/* 2026-07-23 gap-killer: card-footer-nav added for structural
           parity with /progress and /revision. NoMockToday previously
           had no footer affordance — other auth-gated empty-state pages

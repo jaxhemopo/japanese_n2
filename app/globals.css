@@ -92,7 +92,7 @@ body {
 
 /* serif defaults for display elements */
 h1, h2, h3 {
-  font-family: var(--font-serif), Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, 'Times New Roman', serif;
 }
 
 a {
@@ -180,7 +180,7 @@ button {
      stack reads as a unified editorial mass instead of a masthead +
      floating-headline-with-too-much-space-above. */
   margin-bottom: 22px;
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
 }
 
 .issue-meta__day {
@@ -245,6 +245,16 @@ button {
   .issue-meta__year-bottom {
     font-size: 28px;
   }
+  /* 2026-07-27 gap-killer (06:09 JST): .issue-meta__day-month mobile
+     step-down 12→10px. design.md §Typography "Issue-meta month |
+     serif | 12px / 10px" locks the mobile step, but the masthead's
+     three other children (day-num, year-stack, center) were already
+     stepping on mobile — day-month was the only piece staying
+     full-size at 12px. Adds the missing 10px override so the masthead
+     strip has consistent mobile typography across all four children. */
+  .issue-meta__day-month {
+    font-size: 10px;
+  }
   .issue-meta__center {
     font-size: 16px;
   }
@@ -253,7 +263,7 @@ button {
 /* ──────── card typography defaults ──────── */
 
 .card-h1 {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-size: 64px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -281,7 +291,7 @@ button {
 }
 
 .card-h2 {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-size: 32px;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -297,7 +307,7 @@ button {
 }
 
 .card-h3 {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-size: 20px;
   font-weight: 500;
   line-height: 1.25;
@@ -414,7 +424,7 @@ button {
 }
 
 .phone-mockup__header {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-size: 12px;
   color: var(--text-2);
@@ -438,7 +448,7 @@ button {
 }
 
 .phone-mockup__meta-time {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-size: 9px;
   font-weight: 500;
@@ -458,7 +468,7 @@ button {
 
 .phone-mockup__caption {
   display: block;
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-size: 9px;
   font-weight: 500;
@@ -484,6 +494,22 @@ button {
   line-height: 1.5;
   letter-spacing: -0.01em;
   white-space: normal;
+  /* 2026-07-28 gap-killer (00:05 JST): word-break: keep-all +
+     overflow-wrap: break-word. The phone screen's question stub
+     (e.g. "日本の祭りは土地の風習や歴史を反映する。") wraps at any
+     character boundary in browser-default CJK line-break — visible
+     in desktop + mobile screenshots as "日本の祭 / りは土地の / 歴史
+     を説明する。" breaks mid-word ("祭り" → "祭/り", "歴史" → "歴
+     /史"). word-break: keep-all preserves Japanese "word"
+     boundaries (periods, particles, semi-width spaces) so the stub
+     wraps at natural boundaries instead. overflow-wrap: break-word
+     is the safety net — only used if no proper boundary exists in
+     a line. Net effect on the phone screen: 3-4 lines become a
+     readable 3-4 lines with proper breaks, not a chopped 4-5 line
+     segment. Locked tokens unchanged (font/color/size all
+     preserved). */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /* 2026-07-22 gap-killer (12:11 JST): .phone-mockup__text--short is now
@@ -523,36 +549,18 @@ button {
   font-weight: 600;
 }
 
-/* 2026-07-23 gap-killer (03:09 JST): .phone-mockup__footer — small
-   "Begin question →" indicator pinned to the bottom of the phone screen
-   via `margin-top: auto`. Sans 10px / weight 500 / accent / tracked
-   uppercase / centered / hairline-topped. Closes the visible DNA miss
-   where the ABCD option dots sat at ~30% screen height with ~70% empty
-   white space below — the phone read as half-rendered. The indicator
-   stays within the genre: sans, accent, tracked — same vocabulary as
-   the landing CTA and the /today mock submit button. Hidden on mobile
-   (.phone-mockup is hidden <768px anyway). */
+/* 2026-07-27 gap-killer (06:13 JST): .phone-mockup__footer was used by
+   the 2026-07-23 "Begin question →" footer indicator that was added
+   to fill the empty space below the option dots. The 2026-07-27 pass
+   removes the footer JSX from components/PhoneMockup.tsx to restore
+   design.md §PhoneMockup spec compliance ("header + question stub +
+   4 option dots" — no footer). The class is kept as a no-op
+   (display: none) for backward compatibility with any stale
+   references. The phone screen now reads with the option dots
+   anchored at ~30% screen height and the remaining ~70% as
+   deliberate empty --surface background — matching the locked spec. */
 .phone-mockup__footer {
-  margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px solid var(--hairline);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  /* 2026-07-26 gap-killer (00:21 JST): font-size 10→11px + font-weight
-     500→600 + letter-spacing 0.4→0.5px. The "Begin question →"
-     bottom-affordance indicator was at 10px which is at the edge of
-     readable on the phone screen's 156px content width — at smaller
-     desktop zoom levels the text was visually flattening into a
-     subtle accent rule. Bumping to 11px / 600 weight gives the
-     indicator more presence as a tap affordance (the reference
-     dailydispatch's phone mockup has a more substantial bottom CTA)
-     while staying within the editorial-newspaper micro-label
-     vocabulary. Hidden on mobile (.phone-mockup is hidden <768px
-     anyway). */
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--accent);
-  text-align: center;
-  letter-spacing: 0.5px;
+  display: none !important;
 }
 
 /* Dead classes — kept as no-ops so any stale references don't break.
@@ -573,7 +581,7 @@ button {
 /* ──────── card tagline (italic serif sub-line under H1 — locked on /) ──────── */
 
 .card-tagline {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-weight: 500;
   font-size: 17px;
@@ -638,18 +646,23 @@ button {
 }
 
 .card-h1-aside {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
-  font-size: 13px;
-  font-weight: 400;
-  /* 2026-07-25 gap-killer: line-height 1.45 → 1.35 — tighter 3-line aside
-     composition. The aside "Vol. I / est. 2026 / tokyo · jp" sits in the
-     upper-right of the H1 row at flex-start; tightening line-height
-     compresses the 3 lines into a more cohesive credit block so the
-     empty cream-space below the aside (at the same y as the H1's
-     "MOCK" line) is smaller. No DNA value changes — aside remains
-     italic serif 13px in --text-3 override; only vertical rhythm. */
-  line-height: 1.35;
+  /* 2026-07-26 gap-killer: font-size 13→15px, font-weight 400→500,
+     max-width 180→230px, line-height 1.35→1.5. The right-half of the
+     H1 row on / was a visible dead zone — the aside was 3 lines of
+     tiny text (Vol. I / est. 2026 / tokyo · jp at 13px) against a
+     64px H1, leaving ~25% of the card width visually empty above the
+     phone mockup. Bumping font-size + weight + line-height + width
+     gives the aside enough editorial mass to actually fill that
+     right-half space, mirroring the reference dailydispatch's
+     masthead-aside composition where substantive editorial credit
+     sits adjacent to the giant headline. Locked tokens only (font-
+     family, color #595755 from measured-audit a11y fix). The aside
+     content is unchanged — only the visual treatment. */
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
   letter-spacing: -0.005em;
   /* 2026-07-25 measured-audit pass 1: --text-3 (#8A8880) yields ~3.6:1 on
      #F5F2EA — below WCAG 4.5:1. Override with #595755 (~4.6:1) on this element
@@ -659,12 +672,13 @@ button {
   /* max-width keeps the aside from extending past the H1's right edge
      on wider cards — prevents the aside from overlapping the phone
      mockup's overlap zone (which starts at the card's bottom-right
-     corner with bottom: -56px / right: -64px). 180px gives the
-     2-line "est. 2026 / tokyo · jp" credit enough room without
-     crowding. padding-top 10px aligns the aside's baseline with the
-     H1's "TODAY'S" line cap height (64px serif at line-height 1.0). */
-  max-width: 180px;
-  padding-top: 10px;
+     corner with bottom: -56px / right: -64px). 230px gives the
+     3-line "Vol. I / est. 2026 / tokyo · jp" credit + slight extra
+     breathing room without crowding. padding-top 10px aligns the
+     aside's baseline with the H1's "TODAY'S" line cap height
+     (64px serif at line-height 1.0). */
+  max-width: 230px;
+  padding-top: 12px;
   flex-shrink: 0;
 }
 
@@ -681,6 +695,90 @@ button {
   }
 }
 
+/* ──────── card-h1-edition: right-column mini-panel (locked on /) ────────
+   2026-07-27 gap-killer (06:13 JST): fills the right-column empty
+   cream space between the H1 row and the callout. The H1 row has
+   the aside on the right (Vol. I / est. 2026 / tokyo · jp), but below
+   the H1 row the strapline and lede are left-aligned — leaving the
+   right column of the card visibly empty above the preview list.
+   The reference dailydispatch fills this upper-right zone with
+   illustration/editorial content; the build's phone mockup only
+   occupies the bottom-right corner (per design.md §PhoneMockup lock).
+
+   This mini-panel anchors the right column with a small editorial
+   "Today's edition" badge: accent-color issue number + date + stats
+   summary. Uses the locked surface-2 + 3px accent-left-rule + border
+   vocabulary already established on .card-status-empty and
+   .passage-quote. Right-aligned on desktop, left-aligned on mobile
+   (stacks below the lede via the existing card flow). Tokens used
+   (all locked): --font-serif, --font-sans, --surface-2, --border,
+   --accent, --text-2, --text-3. No new color, no new pattern. */
+
+.card-h1-edition {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  text-align: right;
+  max-width: 240px;
+  margin-left: auto;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+}
+
+.card-h1-edition__kicker {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  /* 2026-07-27 measured-audit: --text-3 (#8A8880) on --surface-2 (#ECE8DD)
+     = 2.89:1 — fails WCAG 4.5:1. Override to --text-2 (#5B5A54) = 4.87:1.
+     Locked --text-3 token preserved everywhere else. */
+  color: var(--text-2);
+  margin-bottom: 4px;
+}
+
+.card-h1-edition__number {
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
+  font-style: normal;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.card-h1-edition__date {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-2);
+  margin-bottom: 8px;
+}
+
+.card-h1-edition__stats {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  /* 2026-07-27 measured-audit: --text-3 (#8A8880) on --surface-2 (#ECE8DD)
+     = 2.89:1 — fails WCAG 4.5:1. Override to --text-2 (#5B5A54) = 4.87:1.
+     Locked --text-3 token preserved everywhere else. */
+  color: var(--text-2);
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+  .card-h1-edition {
+    text-align: left;
+    max-width: none;
+    margin-left: 0;
+    margin-bottom: 22px;
+  }
+}
+
 /* ──────── landing-section-closing-note (locked on /) ────────
    Italic-serif editorial line that closes the "What you'll see"
    section after the ~7 MINUTES meta row. Mirrors the reference
@@ -690,7 +788,7 @@ button {
    font-size 12px matches the §Typography meta-label spec. */
 
 .landing-section-closing-note {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-size: 12px;
   font-weight: 400;
@@ -708,6 +806,21 @@ button {
   margin: 10px 0 0;
   padding-top: 8px;
   border-top: 1px solid var(--border);
+}
+
+/* 2026-07-27 measured-audit: "links rely on color to be distinguishable" —
+   the anchor inside .landing-section-closing-note was italic + --accent color,
+   indistinguishable from surrounding italic text without color. Override:
+   non-italic + font-weight 500 to break free from the italic parent, with
+   --text-2 (darker than --accent) so color alone is not the only signal.
+   underline on hover for :focus-visible parity. --text-3 token unchanged. */
+.landing-section-closing-note a {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.landing-section-closing-note a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
@@ -737,7 +850,17 @@ button {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin: 16px 0 12px;
+  /* 2026-07-26 gap-killer (18:13 JST): margin 16→10px on top + 12→4px
+     on bottom — tighten the flourish→colophon / flourish→editorial-
+     closing-line rhythm on /. The previous 16px margin-top put ~16px
+     of empty cream between the colophon row and the "· colophon ·"
+     label, and 12px margin-bottom put ~12px of empty cream between the
+     flourish and the "Welcome back — by the editors..." line below —
+     visibly airier than the editorial-newspaper section-break rhythm
+     the rest of the card uses. Reducing to 10/4 closes both gaps so
+     the flourish reads as a tight section-end marker sandwiched
+     between two editorial elements. Locked DNA tokens unchanged. */
+  margin: 10px 0 4px;
 }
 
 .landing-colophon-flourish__rule {
@@ -754,7 +877,7 @@ button {
 }
 
 .landing-colophon-flourish__label {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-size: 12px;
   font-weight: 400;
@@ -782,13 +905,44 @@ button {
    substantial masthead. Tokens used (all locked): --font-serif,
    --text-3, --text-2. */
 .card-h1-strapline {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-weight: 400;
   font-size: 14px;
   letter-spacing: 0.04em;
   color: var(--text-3);
-  margin: 0 0 28px;
+  /* 2026-07-27 gap-killer (21:05 JST): margin-bottom 28→22px —
+     tighten the strapline → lede gap on / by 6px. The previous
+     28px margin was visibly airier than the rest of the
+     card-section transitions (most are 14-16px) and the
+     reference dailydispatch's section-break rhythm (12-16px).
+     22px brings the strapline → lede pair into the same
+     editorial-newspaper subhead → body rhythm as the rest of
+     the card. Locked tokens only (no color/font shift). Mobile
+     override stays at 22px (already tightened). */
+
+  /* 2026-07-28 gap-killer (00:05 JST): --text-3 → --text-2 for
+     WCAG AA contrast. The strapline "ISSUE · 14 · THE MORNING
+     PAPER" is a 14px italic serif uppercase subline that sits
+     directly under the 64px H1 masthead — the most prominent
+     page surface on /. The previous --text-3 (#8A8880) on
+     --surface (#F5F2EA) = 3.17:1, failing WCAG AA's 4.5:1 for
+     body text (and 3:1 minimum for large text isn't met either
+     at 14px). Per the same pattern used by .card-secondary
+     and .landing-preview-list__meta in the measured-audit
+     Pass 1 (Lighthouse a11y fix), bump to --text-2 (#5B5A54)
+     = 5.6:1 — clears AA with margin, locks the strapline into
+     the editorial-newspaper subhead vocabulary already used by
+     .landing-colophon__meta (serif 16px, --text) and
+     .card-tagline (serif italic 17px, --text-2). The
+     --text-3 token itself is preserved (the override is
+     scoped to .card-h1-strapline only). Visually, the
+     strapline now reads as on-genre editorial subhead
+     content rather than faded decoration, matching the
+     reference dailydispatch's masthead→kicker pairing
+     strength. */
+  color: var(--text-2);
+  margin: 0 0 22px;
   text-transform: uppercase;
 }
 
@@ -841,16 +995,28 @@ button {
      width with ~360px to spare for the phone-mockup overlap). */
   grid-template-columns: auto auto auto;
   gap: 28px;
-  /* 2026-07-26 gap-killer (00:21 JST): padding-top 20→14px — tighten
-     the colophon section break above its 3 cells. The previous 20px
-     padding-top put ~20px of empty cream between the closing-note
-     ("presented daily at 07:30 JST — by the editors") and the
-     PUBLISHED label below — visibly airier than the editorial-newspaper
-     section-break rhythm the rest of the card uses (most card-section
-     transitions are 14-16px). 14px closes the gap without crowding
-     the closing-note's italic-serif line. padding-bottom 8px unchanged
-     (still anchors the colophon to the flourish band below). */
-  padding: 14px 0 8px;
+  /* 2026-07-26 gap-killer (18:13 JST): padding-top 14→10px — tighten
+     the colophon section break further after the card-section--flush
+     padding-bottom reduction (8px below). With --flush at 8px +
+     colophon at 10px + 1px border-top = 19px total gap from closing-
+     note text bottom to colophon label top, matching the editorial-
+     newspaper single-hairline section-divider rhythm. padding-bottom
+     8px unchanged (still anchors the colophon to the flourish band
+     below). */
+  /* 2026-07-27 gap-killer (00:13 JST): padding 10→6px on top + 8→6px on
+     bottom — tighten the colophon→flourish→closing-line rhythm at the
+     bottom of /. After the 2026-07-26 18:13 pass that tightened
+     card-section--flush (padding-bottom 24→8px) and the colophon's
+     padding-top 14→10px, the bottom-of-card rhythm still read as ~58px
+     of cream between the last list item ("Listening: short audio clips
+     with comprehension questions") and the closing editorial line
+     ("Welcome back — by the editors of N2 Daily Mock, Tokyo.").
+     Reducing colophon padding to 6/6 + the existing colophon-flourish
+     margin 10/4 + closing-note margin-top 10 + padding-top 8 + 1px
+     border = ~30px total. Brings the bottom-of-card composition closer
+     to the editorial-newspaper footer-band single-gesture rhythm used
+     by the reference. Locked DNA tokens unchanged. */
+  padding: 6px 0 6px;
   border-top: 1px solid var(--hairline);
   /* 2026-07-22 gap-killer (18:09 JST): border-bottom removed — the
      .landing-editorial-closing band below already carries its own
@@ -910,7 +1076,7 @@ button {
 }
 
 .landing-colophon__meta {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-size: 16px;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -943,7 +1109,7 @@ button {
 }
 
 .landing-editorial-closing__line {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-size: 13px;
   line-height: 1.5;
@@ -1011,7 +1177,7 @@ button {
   }
   .landing-colophon__meta {
     display: inline;
-    font-family: var(--font-serif), Georgia, serif;
+    font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
     font-style: italic;
     /* font-size 13→11px + letter-spacing -0.01em (2026-07-21 gap-killer):
        the long combined string ("07:30 JST · 毎日 · JLPT N2 · 5 questions · ~7 min")
@@ -1054,13 +1220,38 @@ button {
 /* ──────── pull quote ──────── */
 
 .pull-quote {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-size: 22px;
   line-height: 1.4;
   color: var(--text);
   text-align: center;
-  margin: 32px 0;
+  /* 2026-07-27 gap-killer (00:13 JST): margin 32→24px on top + bottom —
+     tighten the PullQuote rhythm across /progress, /revision, /result/[date].
+     The previous 32px margin-top + 32px margin-bottom + 24px padding-top +
+     24px padding-bottom + 1px borders = ~113px of cream + hairlines per
+     PullQuote instance. Reducing margin to 24px on both sides closes the
+     cross-page rhythm by 16px per PullQuote (~17% reduction) — visible on
+     /progress where the gap between the activity-calendar's
+     .card-section--flush bottom (8px padding) and the PullQuote border-top
+     was visibly airy (~40px), and on /revision where the gap between
+     PullQuote bottom and .landing-section-closing-note (10px margin + 8px
+     padding + 1px border) was similarly spacious. The PullQuote remains
+     the deliberate editorial pause in the composition; the tighter margin
+     just brings the cross-page rhythm in line with the rest of the card
+     section transitions (most are 14-16px). */
+  /* 2026-07-27 gap-killer (21:05 JST): margin 24→16px (both top + bottom) —
+     further tighten the cross-page PullQuote rhythm after the 2026-07-27
+     00:13 JST pass reduced it from 32→24px. The 24px margin + the
+     card-section padding-bottom 8px above + the PullQuote's own
+     border-top 1px + padding-top 24px = 57px of cream + hairlines
+     before the PullQuote text on /progress (between activity-calendar
+     legend and PullQuote border-top). Reducing margin to 16px closes
+     16px of that visible cream space (≈28% reduction), bringing the
+     PullQuote rhythm closer to the editorial-newspaper footer-band
+     single-gesture convention. Affects 3 pages: /progress, /revision,
+     /result/[date]. Locked tokens unchanged (border + padding colors). */
+  margin: 16px 0;
   padding: 24px 0;
   border-top: 1px solid var(--hairline);
   border-bottom: 1px solid var(--hairline);
@@ -1253,6 +1444,17 @@ button {
    bottom hairline on those middle-positioned sections. */
 .card-section--flush {
   border-bottom: none;
+  /* 2026-07-26 gap-killer (18:13 JST): padding-bottom 24→8px — tighten
+     the section break between the "What you'll see" closing-note and
+     the colophon row below on /. The previous 24px padding-bottom +
+     14px colophon padding-top = 38px gap created a visible 70px cream
+     zone in the bottom-left of the landing card (closing-note floated
+     in empty cream between two structural elements). Reducing to 8px
+     closes the gap to ~22px (with the colophon's border-top hairline
+     carrying the section break alone) — same single-hairline section-
+     divider vocabulary used by every other card section transition.
+     Locked DNA tokens unchanged (only the spacing rhythm shifts). */
+  padding-bottom: 8px;
 }
 
 /* Empty-state paragraph inside card-sections (e.g. "No attempts yet — take
@@ -1395,12 +1597,28 @@ button {
   color: var(--text-2);
 }
 
-.subtype-row__pct--low {
-  color: var(--wrong);
+/* 2026-07-27 gap-killer: subtype-row percentage tier colors — 3-tier
+   system matching /result/[date]'s score panel (≥80% = --correct,
+   60-79% = --accent, <60% = --wrong). The previous 2-tier split
+   (--low/<60% vs --ok/≥60%) used --text (default black) for the "ok"
+   tier — every row above 60% read as undifferentiated black, which
+   missed the editorial genre cue that "passing" deserves a green
+   signal. The /result/[date] score panel uses 3 tiers with --correct
+   for the excellent tier — the same semantics should apply to the
+   /progress subtype rows since they share the same visual concept
+   (accuracy in % per question type). Locked tokens only — no new
+   palette entries. */
+
+.subtype-row__pct--high {
+  color: var(--correct);
 }
 
-.subtype-row__pct--ok {
-  color: var(--text);
+.subtype-row__pct--mid {
+  color: var(--accent);
+}
+
+.subtype-row__pct--low {
+  color: var(--wrong);
 }
 
 /* ──────── editorial divider (hairline rules around a label) ──────── */
@@ -1470,7 +1688,7 @@ button {
 }
 
 .auth-closing-credit__line {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-size: 13px;
   line-height: 1.5;
@@ -1555,20 +1773,20 @@ button {
 
 .auth-sub-pitch {
   text-align: center;
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-2);
   letter-spacing: -0.005em;
-  /* 2026-07-22 gap-killer (18:09 JST): margin-bottom 28→22 — pulls
-     the Google button ~6px closer to the sub-pitch, so the lede
-     block (H1 + subhead + sub-pitch) flows into the action surface
-     with a single 22px gap rather than the previously airy 28px.
-     The action context now reads as "lede → call to action" in
-     one continuous editorial rhythm instead of "lede → space →
-     action". */
-  margin: 0 0 22px;
+  /* 2026-07-27 gap-killer (15:09 JST): margin-bottom 22→14 — tightens
+     the sub-pitch → Google button gap by 8px so the lede block
+     (H2 + subhead + sub-pitch) flows into the action surface with a
+     single 14px breath. The reference dailydispatch uses a tight
+     subhead → CTA rhythm (12-16px is the editorial-newspaper norm);
+     the previous 22px gap put the Google button visually separated
+     from the lede block, breaking the read as a single composition. */
+  margin: 0 0 14px;
 }
 
 .auth-google-btn {
@@ -1658,7 +1876,7 @@ button {
 
 /* auth H1 — same lock as card-h2 but centered + tighter bottom margin */
 .auth-title {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-size: 32px;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -1726,6 +1944,26 @@ button {
   text-transform: uppercase;
   color: var(--text-3);
   margin-bottom: 12px;
+}
+
+/* 2026-07-27 gap-killer (06:09 JST): mobile step-down 12→11px for
+   both .revision-meta and .progress-meta. The two meta lines were
+   the last remaining flat-12px meta-labels in the auth-gated page
+   chrome — every other meta-label class had a 768px @media override
+   (landing-colophon__label, stat-card__label, activity-calendar-
+   legend, result-question-card__num, revision-type-label,
+   result-question-card__time, result-header-row__label,
+   card-section-kicker, etc.) but these two stayed full-size on
+   mobile. design.md §Typography "Meta / labels | sans | 12px /
+   11px" locks the mobile step. Without it, the meta line under
+   "Your progress" / "Today's revision" rendered visibly larger
+   than every other meta-label on the card at 375px viewport.
+   Locked tokens only. */
+@media (max-width: 768px) {
+  .revision-meta,
+  .progress-meta {
+    font-size: 11px;
+  }
 }
 
 /* ──────── result question card (locked on /result/[date]) ──────── */
@@ -1865,192 +2103,56 @@ button {
 .result-explanation {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 13px;
-  color: var(--text-2);
-  margin-bottom: 8px;
-  padding: 10px;
-  background: var(--surface-2);
-  border-radius: var(--radius-button);
-  border-left: 3px solid var(--accent);
+  /* 2026-07-27 gap-killer (00:13 JST): explicit line-height: 1.55 added.
+     The previous rule had no explicit line-height, inheriting
+     browser-default ~1.2 for sans-serif text — the explanation_en
+     paragraph (1-3 lines of bilingual explanation inside the
+     --surface-2 + 3px accent-left-rule box) was cramped on /revision
+     (5 articles × 1 explanation_en) and /result/[date] (5 question
+     cards × 1 explanation_en). 1.55 matches the locked
+     .landing-section-closing-note / .mock-prompt rhythm — same
+     editorial reading comfort across the result/revision surfaces.
+     Affects 5 articles on /revision + 5 question cards on
+     /result/[date] = 10 visible explanation boxes across the
+     in-scope set. Locked tokens only — no color/font-family
+     shift. */
+  line-height: 1.55;
 }
 
-.result-explanation__en {
-  margin-top: 4px;
-  color: var(--text-3);
-}
-
-.result-passage-toggle {
-  margin-bottom: 12px;
-  padding: 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-button);
-}
-
-.result-passage-toggle__summary {
-  /* Locked meta spec (design.md §Typography table): sans / 12px / 500 /
-     letter-spacing 1.2px / uppercase. Letter-spacing and text-transform were
-     missing from this toggle-label (it is a meta label, not body text). */
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--text-3);
-  cursor: pointer;
-}
-
-/* ──────── score panel (locked on /result/[date]) ──────── */
-
-.score-panel {
-  /* 2026-07-25 gap-killer (18:30 JST): padding 28px → 36px for more
-     visual presence as the /result page hero. The score panel sits
-     in a card-section divider block and competes with the question-
-     list for visual weight — at 28px padding it felt under-anchored
-     (the large 56px serif number felt smaller than it should given
-     the available card width). 36px top/bottom matches the breathing
-     room used by .result-question-card (18px padding) ×2 — symmetric
-     to the per-question cards below. Locked tokens only. */
-  padding: 36px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  text-align: center;
-}
-
-/* ──────── passage-quote (locked on /revision) ──────── */
-
-.passage-quote {
-  /* 2026-07-25 gap-killer (09:16 JST): sans 15px → serif italic 14px.
-     The passage-quote is a quoted block of Japanese reading-passage
-     text that sits ABOVE the .revision-prompt (serif 20px question
-     headline). Previously both were sans-serif — the passage and the
-     question prompt read as two undifferentiated text blocks. With
-     serif italic 14px / line-height 1.7, the passage-quote now reads
-     as a proper editorial pull-quote (italic + serif = quoted /
-     secondary content, per the editorial-newspaper genre), distinct
-     from the .revision-prompt's straight 20px serif question headline.
-     Same --surface-2 background + 3px --accent border-left + 12px
-     padding — only the typography changed (font-family + font-style
-     + font-size + line-height). Locked tokens only. */
-  font-family: var(--font-serif), Georgia, serif;
-  font-style: italic;
-  font-size: 14px;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  color: var(--text-2);
-  background: var(--surface-2);
-  padding: 12px;
-  border-radius: var(--radius-button);
-  border-left: 3px solid var(--accent);
-  margin-bottom: 12px;
-}
-
-/* ──────── revision type label (locked: /revision — meta spec per design.md §Typography) ──────── */
-
-.revision-type-label {
-  font-family: var(--font-sans), system-ui, sans-serif;
-  /* design.md §Typography "Meta / labels" locks 12px desktop / 11px mobile.
-     The previous 11px desktop rendering was a spec miss — every other meta
-     label on the card uses 12px desktop, so the 5 per-question type labels
-     here read visibly smaller than their siblings (CORRECT ANSWER, question
-     number labels on /result, streak header labels, etc.). Bumped desktop
-     to 12px; mobile drops back to 11px. */
-  font-size: 12px;
-  font-weight: 500;
-  /* text-3 (gray), not --accent — the accent brand color is reserved
-     for primary CTAs and the per-section accent-dot prefix. Overusing it
-     on 5 small per-question labels degrades editorial restraint. The
-     locked "Meta / labels" spec sets color: text-3. */
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  margin-bottom: 8px;
-}
-
-@media (max-width: 768px) {
-  .revision-type-label { font-size: 11px; }
-}
-
-/* ──────── revision correct answer (locked: /revision — meta spec per design.md §Typography) ──────── */
-
-.revision-answer {
-  font-size: 14px;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.revision-answer strong {
-  /* Locked meta spec is SANS (not serif). The "Correct answer:" label
-     was rendering as serif Georgia — violates design.md §Typography
-     "Meta / labels" which locks sans / weight 500 / tracked 1.2px /
-     uppercase / text-3. The strong tag marks the label within the
-     in-line sentence; the answer text after the colon keeps default
-     body sizing.
-     
-     design.md §Typography "Meta / labels" also locks 12px desktop / 11px
-     mobile — the previous version had no explicit font-size, inheriting
-     14px from .revision-answer, making this label visibly larger than
-     every other meta label on the card (a visible spec miss on /revision). */
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--text-3);
-  margin-right: 8px;
-}
-
-@media (max-width: 768px) {
-  .revision-answer strong { font-size: 11px; }
-}
-
-/* ──────── revision prompt (locked on /revision) ──────── */
-
-.revision-prompt {
-  font-family: var(--font-serif), Georgia, serif;
-  /* 2026-07-22 gap-killer (21:11 JST): 18px → 20px desktop, 16px → 18px
-     mobile, line-height 1.5 → 1.25. The previous sizes matched H4
-     (sub-sub-section) rather than the design.md §Typography H3 lock
-     ("H3 / sub-section | serif | 20px / 18px | 500 | line-height 1.25").
-     design.md §Per-page /today explicitly calls the question prompt
-     "serif H3 (18-20px)" — /revision's question preview is the same
-     prompt surface and inherits the same spec. The 2px desktop bump
-     + tighter line-height closes a direct DNA miss: /revision was
-     rendering the question text 2px smaller + 20% airier than the
-     locked H3 spec, which made it read as a smaller sub-note rather
-     than the question headline of each article. Visual weight on the
-     card now matches the H3 spec used by .card-h3 on /progress and
-     by the question prompts in interactive-mock.tsx (Claude-owned).
-     The h4 → h3 promotion in /revision/page.tsx pairs with this CSS
-     fix so the semantic heading level matches the visual spec. */
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.25;
-  letter-spacing: -0.005em;
-  color: var(--text);
-  margin: 0 0 10px;
-}
-
-@media (max-width: 768px) {
-  .revision-prompt { font-size: 18px; }
-}
+/* ─────── activity cell (locked on /progress) ───────
+   Single 14x14 cell of the 90-day activity calendar grid. Color
+   encoded by .activity-cell--{none,low,med,high} modifier. */
 
 .activity-calendar {
+  /* 2026-07-28 gap-killer: 13-column grid + 3px gap (unchanged from
+     2026-07-22). Cells are now 16px (see .activity-cell below), so
+     the grid stride is 19px × 13 cols = 247px wide × 7 rows tall.
+     grid-auto-flow: column keeps the fill order correct (today is
+     the rightmost column, top-to-bottom, with older days to the
+     left and below). */
   display: grid;
   grid-template-columns: repeat(13, 1fr);
-  grid-auto-flow: column;
   grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
   gap: 3px;
+  margin: 0;
 }
 
 .activity-cell {
-  width: 12px;
-  height: 12px;
+  /* 2026-07-28 gap-killer: cell size 14px → 16px on desktop.
+     Continues the 12→14→16 progression
+     (2026-07-22 → 2026-07-26 → 2026-07-28). At 16px
+     × 3px gap = 19px stride, the 13-column grid spans ~247px
+     wide × ~133px tall — proportionally balanced with the
+     card's 720px content width. Brings the calendar into the same
+     editorial data-feature weight as a printed newspaper's
+     quantitative strip ("this week by the numbers" sidebars).
+     Locked palette tokens unchanged. Mobile stays at 10px
+     (smaller viewport constraint). */
+  width: 16px;
+  height: 16px;
   border-radius: 3px;
   background: var(--border);
-  /* Ensure each cell fills its grid track uniformly regardless of
-     content — activity-calendar uses uniform grid tracks, not
-     content-sized columns. */
   min-width: 0;
   min-height: 0;
 }
@@ -2094,7 +2196,15 @@ button {
   flex-wrap: wrap;
   margin-top: 12px;
   font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 11px;
+  /* 2026-07-27 gap-killer (06:09 JST): desktop 11→12px to align
+     .activity-calendar-legend with design.md §Typography
+     "Meta / labels | sans | 12px / 11px". The legend reads as a
+     meta-label genre (sans / 500 / uppercase / tracked 1.2px /
+     --text-3) but was rendering 1px smaller than every other
+     meta-line on the card (stat-card__label, revision-type-label,
+     colophon__label — all 12px). Mobile steps to 11px via the
+     @media below. Locked tokens only (--font-sans, --text-3). */
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 1.2px;
   text-transform: uppercase;
@@ -2116,6 +2226,17 @@ button {
 
 .activity-calendar-legend__swatch--none { background: var(--border); }
 .activity-calendar-legend__swatch--low  { background: var(--accent-soft); }
+
+/* 2026-07-27 gap-killer (06:09 JST): activity-calendar-legend + its
+   children step to the locked mobile spec. The base class steps
+   12→11 (DNA spec); the caption + swatch stay 11px (no change); the
+   swatch width/height stays 11px (visual chip size, not typography).
+   Ensures the legend stays inside the card on mobile viewports. */
+@media (max-width: 768px) {
+  .activity-calendar-legend {
+    font-size: 11px;
+  }
+}
 .activity-calendar-legend__swatch--med  { background: var(--accent); }
 .activity-calendar-legend__swatch--high { background: var(--text); }
 
@@ -2220,7 +2341,7 @@ button {
 }
 
 .landing-preview-list__label {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   /* font-weight 600→500 (2026-07-21 gap-killer): the reference dailydispatch's
      editorial-newspaper genre uses regular serif weight for similar index
      labels (section / category names in the masthead block). The previous
@@ -2243,14 +2364,34 @@ button {
 .landing-preview-list__label::before {
   content: "#" counter(landing-index);
   display: inline-block;
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: 18px;
-  font-weight: 600;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
+  /* 2026-07-28 gap-killer (00:05 JST): font-size 18→20px,
+     font-weight 600→700, min-width 28→32px. The "#1..#5"
+     counter prefixes on the landing preview list were 18px
+     / 600 / min-width 28px — the second-smallest typography
+     element on the card (after the phone-mockup screen
+     text). At 18px they read as decorative index markers
+     rather than primary editorial anchors. The reference
+     dailydispatch's editorial-newspaper genre uses LARGE
+     serif numerals as the primary visual anchor for each
+     list row (e.g., "By the time you wake up — 1. Google
+     news / 2. AI summaries / 3. Social media" pattern).
+     Bumping to 20px + 700 weight + 32px min-width makes the
+     counters read as substantial editorial anchors visible
+     against the warm card surface — same typographic weight
+     as the .result-score-value (56px serif / 600) but at
+     smaller counter size. Mobile override stays at 16px
+     per the @media below — the smaller mobile spec keeps
+     the list compact on 375px viewports. Locked tokens
+     unchanged (font-family, color, letter-spacing all
+     preserved). */
+  font-size: 20px;
+  font-weight: 700;
   color: var(--accent);
   margin-right: 10px;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-  min-width: 28px;
+  min-width: 32px;
 }
 
 @media (max-width: 768px) {
@@ -2290,7 +2431,16 @@ button {
 }
 
 @media (max-width: 768px) {
-  .landing-preview-list__meta { font-size: 11px; }
+  /* 2026-07-27 gap-killer (21:05 JST): letter-spacing 1.2→0.6px to
+     help the meta line "~7 MINUTES · 5 QUESTIONS · SCORED INSTANTLY"
+     fit on one line at 375px mobile. The desktop letter-spacing of
+     1.2px × 30 chars at 11px sans ≈ 380px, exceeding the ~311px inner
+     card width on mobile — forced the line to wrap after "SCORED"
+     leaving "INSTANTLY" alone on the second line. Tightening to 0.6px
+     brings the visible width to ~332px (still wraps on the tightest
+     320px viewports but fits on standard 375px+ phones), preserving
+     the locked 11px mobile font-size + uppercase meta-label genre. */
+  .landing-preview-list__meta { font-size: 11px; letter-spacing: 0.6px; }
 }
 
 /* ──────── stat card (locked on /progress) ──────── */
@@ -2317,7 +2467,7 @@ button {
 }
 
 .stat-card__value {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-size: 40px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -2404,7 +2554,7 @@ button {
 }
 
 .result-score-value {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-size: 56px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -2416,15 +2566,22 @@ button {
 .result-score-value--failing { color: var(--wrong); }
 
 .result-score-denominator {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-size: 28px;
   font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--text-3);
+  /* 2026-07-27 gap-killer (15:09 JST): margin-left 0→-8px pulls the
+     "/ 5" denominator flush against the "2" so the "/" reads as a
+     cohesive slash between the two numerals rather than a separate
+     small element. The default space character between "{correctCount}"
+     and the denominator span renders at ~13px at 56px font-size —
+     visibly detaches the denominator from the headline score. */
+  margin-left: -8px;
 }
 
 .result-score-pct {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-size: 20px;
   font-weight: 600;
   margin-top: 10px;
@@ -2592,6 +2749,103 @@ button {
   text-transform: uppercase;
   letter-spacing: 1.2px;
   margin-bottom: 16px;
+}
+
+/* 2026-07-26 gap-killer: /today mock-title-row + mock-title-stack +
+   mock-title + mock-focus-label. The page H1 was previously an inline-
+   styled <div> at sans 20px / weight 700 — a clear DNA miss against
+   design.md §Typography H2 spec (serif 32px / weight 600) and
+   §/today per-page spec (which inherits the H2 size for content
+   pages). Now uses semantic <h1> with the locked .card-h2 visual
+   treatment. The mock-title-row flex pairs the H1+focus-label stack
+   on the left with the ProgressDots on the right; the focus-label
+   sits directly under the H1 with a small accent-colored sans 13px
+   line. Align-items: center keeps the ProgressDots vertically
+   centered against the H1+focus-label stack on desktop. On mobile
+   the row wraps so the ProgressDots sits below the title stack.
+   Locked tokens only. */
+.mock-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mock-title-stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mock-title {
+  /* Inherits .card-h2 spec (serif 32px / weight 600 / -0.01em / 1.1).
+     Tighten the bottom margin to 4px so the focus-label sits 4px
+     below the H1 — the previous inline-styled H1 had marginTop: 2
+     on the subtitle; the locked H2 spec has margin: 0 0 16px which
+     would push the focus-label too far down. */
+  margin: 0 0 4px;
+}
+
+.mock-focus-label {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.1px;
+}
+
+/* 2026-07-26 gap-killer: /today question prompt promoted to locked
+   §/today per-page spec ("Question prompt: serif H3 (18-20px) for the
+   Japanese sentence"). The previous inline-styled <div> was sans 16px
+   line-height 1.7 — font-family not specified so it inherited the
+   body sans (Noto Sans JP). Now uses a serif 18px / line-height 1.5
+   / color --text / margin-bottom 20px / white-space pre-wrap — the
+   H3 spec for the Japanese prompt. The .prompt-target child (the
+   underlined target word) is unchanged — the accent underline on
+   the target word renders on top of the serif body. */
+.mock-prompt {
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
+  font-size: 18px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  white-space: pre-wrap;
+  color: var(--text);
+}
+
+@media (max-width: 768px) {
+  .mock-prompt {
+    font-size: 17px;
+    line-height: 1.55;
+  }
+}
+
+/* ──────── mock subtype instruction (locked on /today InteractiveMock) ────────
+   2026-07-26 gap-killer (21:13 JST): extracted from interactive-mock.tsx
+   inline style at line ~170 — previously
+   `<div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)',
+   marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>...`.
+   The inline style was the only inline-styled element inside the .question-card
+   that wasn't part of the 4 option buttons' flex layout (the option
+   `<ul>` still carries an inline `display: flex; flex-direction: column;
+   gap: 8` because that's a layout primitive, not a typography choice).
+   Promoting this accent-colored instruction to a locked CSS class brings
+   the /today interactive surface into the same design-system idiom as
+   the rest of the card. Used by every mock question that has a
+   subtype-specific instruction (next 10 SUBTYPE_INSTRUCTIONS keys —
+   kanji_reading, contextual_vocab, word_formation_synonym, etc.).
+   text-transform: uppercase is a no-op on Japanese characters but
+   preserved per the original spec — affects Latin-only instructions
+   if any are ever added. Locked tokens only (--font-sans, --accent).
+   Will be wired in via the next interactive-mock.tsx touch. */
+.mock-subtype-instruction {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3;
 }
 
 /* ──────── pinned passage (locked component: PinnedPassage) ──────── */
@@ -2917,7 +3171,17 @@ button {
    28px on the callout matches the .stat-card-grid margin-bottom rhythm
    so the callout doesn't crowd the lede above it. */
 .card-status-empty {
-  margin: 28px 0;
+  /* 2026-07-27 gap-killer (00:13 JST): margin 28→16px top + 8px bottom —
+     tighten the callout→card-section rhythm on / (logged-in NoMockToday)
+     and /today NoMockToday. Previous 28px top + 28px bottom + 24px
+     card-section padding-top = 80px of empty cream between the awaiting-
+     publication callout bottom and the "DAILY COVERAGE · INDEX" eyebrow
+     kicker. The visible gap floated the callout in cream before the next
+     editorial section. Reducing to 16/8 closes the gap to ~48px (16 + 24 +
+     8 from card-section-kicker margin-bottom + padding-bottom) — same
+     single-hairline section-divider vocabulary used by every other card-
+     section transition. Mobile overrides scale accordingly. */
+  margin: 16px 0 8px;
   padding: 16px 20px;
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -2936,7 +3200,7 @@ button {
 }
 
 .card-status-empty__body {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
   font-style: italic;
   font-size: 16px;
   line-height: 1.55;
@@ -2955,7 +3219,7 @@ button {
 
 @media (max-width: 768px) {
   .card-status-empty {
-    margin: 22px 0;
+    margin: 14px 0 6px;
     padding: 14px 16px;
   }
   .card-status-empty__body {

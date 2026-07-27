@@ -124,7 +124,7 @@ export default async function ProgressPage() {
       <section className="stat-card-grid">
         <StatCard label="Total answered" value={String(total)} />
         <StatCard label="Overall accuracy" value={overallAccuracy !== null ? `${overallAccuracy}%` : '—'} />
-        <StatCard label="Active days (90d)" value={`${activeDays}/90`} />
+        <StatCard label="Active days (90d)" value={`${activeDays} of 90`} />
       </section>
 
       <div className="card-section">
@@ -142,7 +142,18 @@ export default async function ProgressPage() {
               >
                 <div className="subtype-row__label">{subtypeLabel(row.tag)}</div>
                 <div className="subtype-row__score">
-                  {row.correct}/{row.total} · <strong className={row.accuracy < 60 ? 'subtype-row__pct--low' : 'subtype-row__pct--ok'}>{row.accuracy}%</strong>
+                  {row.correct}/{row.total} ·{' '}
+                  <strong
+                    className={
+                      row.accuracy >= 80
+                        ? 'subtype-row__pct--high'
+                        : row.accuracy >= 60
+                          ? 'subtype-row__pct--mid'
+                          : 'subtype-row__pct--low'
+                    }
+                  >
+                    {row.accuracy}%
+                  </strong>
                 </div>
               </div>
             ))}
@@ -189,6 +200,19 @@ export default async function ProgressPage() {
       <PullQuote>
         Progress has always belonged to the informed. Not the fastest, but the most astute.
       </PullQuote>
+
+      {/* 2026-07-26 gap-killer: landing-section-closing-note added for
+          cross-page editorial consistency with /revision, /result/[date],
+          /today NoMockToday, and the / landing (both branches). All four
+          sibling surfaces carry a small italic-serif closing line between
+          PullQuote and footer-nav; /progress was the only auth-gated
+          page missing it, leaving visible whitespace between the
+          PullQuote's bottom hairline and the footer nav. Same class
+          already in globals.css — no new CSS. Locked DNA tokens only
+          (--font-serif, --text-3). */}
+      <p className="landing-section-closing-note">
+        Logged for the record — by the editors.
+      </p>
 
       {/* 2026-07-23 gap-killer: card-footer-nav added for structural
           parity with /result/[date]. The closing "where to go next"

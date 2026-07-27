@@ -133,16 +133,23 @@ export default function InteractiveMock({
       <header className="mock-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
           <StreakBadge count={streak} />
-          <div style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-            {['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][parseInt(mock.date.slice(5,7))-1]} {mock.date.slice(8)}
-          </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>今日の N2 モック</div>
-            <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500, marginTop: 2 }}>
-              Today: {focus}
-            </div>
+        <div className="mock-title-row">
+          <div className="mock-title-stack">
+            {/* 2026-07-26 gap-killer: page H1 promoted to locked .card-h2 spec
+               (serif 32px / weight 600 / letter-spacing -0.01em / line-height
+               1.1). The previous inline-styled <div> was sans 20px / weight
+               700 — a clear DNA miss against design.md §Typography H2 spec
+               and §/today per-page spec (which the H1 inherits the H2 size
+               from — /today is a content surface, not a masthead). Now uses
+               semantic <h1> with the locked visual treatment so the H1
+               matches the /progress / /revision / /result/[date] H2 rhythm
+               (the only other auth-gated content page that has a page-
+               level heading). The "Today: {focus}" focus-label is kept as
+               a sans 13 / accent line below the H1 — the accent color is
+               intentional (it labels the focus, not meta chrome). */}
+            <h1 className="card-h2 mock-title">今日の N2 モック</h1>
+            <div className="mock-focus-label">Today: {focus}</div>
           </div>
           <ProgressDots
             total={total}
@@ -160,11 +167,19 @@ export default function InteractiveMock({
 
       <article className="question-card">
         {SUBTYPE_INSTRUCTIONS[current.tags?.[0]] && (
-          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+          /* 2026-07-26 gap-killer (21:13 JST): inline style extracted to
+             the locked .mock-subtype-instruction class (globals.css).
+             Previously the only inline-styled typography element inside
+             .question-card (the rest of the card uses locked CSS classes).
+             The class carries the same accent 12px uppercase-tracked sans
+             treatment — DNA-equivalent. text-transform: uppercase is a
+             no-op on the current Japanese instructions but preserved for
+             Latin instructions if any are added later. */
+          <div className="mock-subtype-instruction">
             {SUBTYPE_INSTRUCTIONS[current.tags[0]]}
           </div>
         )}
-        <div style={{ fontSize: 16, lineHeight: 1.7, marginBottom: 20, whiteSpace: 'pre-wrap', color: 'var(--text)' }}>
+        <div className="mock-prompt">
           <PromptWithTarget prompt={current.prompt} targetWord={current.target_word} />
         </div>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>

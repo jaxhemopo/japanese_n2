@@ -53,23 +53,20 @@ export function PhoneMockup() {
           <span className="phone-mockup__option">C</span>
           <span className="phone-mockup__option">D</span>
         </div>
-        {/* 2026-07-23 gap-killer (03:09 JST): "Begin question →" footer
-            indicator pinned to the bottom of the phone screen via
-            `margin-top: auto`. Closes the visible DNA miss where the
-            ABCD option dots sat at ~30% screen height with ~70% empty
-            white space below — the phone read as half-rendered. Adding
-            the footer indicator (sans 10px / 500 / accent / centered /
-            hairline-topped) anchors the bottom of the screen and reads
-            as a "tap to begin" affordance — the question-state CTA that
-            design.md §PhoneMockup implicitly requires (the spec lists
-            "header + question stub + option dots" as the locked
-            content, but the empty space below was the visual cost of
-            leaving the screen without an action affordance). The
-            indicator stays within the genre: sans, accent, tracked —
-            same vocabulary as the landing CTA and the /today mock
-            submit button. Hidden on mobile (.phone-mockup is hidden
-            <768px anyway). */}
-        <div className="phone-mockup__footer">Begin question →</div>
+        {/* 2026-07-27 gap-killer (06:13 JST): removed the
+            "Begin question →" footer that was added by the 2026-07-23
+            gap-killer pass. design.md §PhoneMockup explicitly locks
+            screen content as "small N2 Daily Mock header + 1 question
+            stub + 4 option dots" — no footer. The footer was a
+            documented deviation from the locked spec (the 2026-07-26
+            21:13 pass notes called it out: "deliberate empty space
+            below the options (--surface background) to keep the
+            composition restrained"). Now the phone screen reads with
+            the option dots anchored at ~30% screen height and the
+            remaining ~70% as deliberate empty --surface background —
+            matching the locked spec. The .phone-mockup__footer CSS
+            class is kept as a no-op (display: none) in globals.css for
+            backward compatibility with any stale references. */}
       </div>
     </div>
   );

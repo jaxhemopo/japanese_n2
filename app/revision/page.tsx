@@ -16,6 +16,25 @@ import { TiltedCard } from '@/components/TiltedCard';
 import { PullQuote } from '@/components/PullQuote';
 import { NavBar } from '@/components/NavBar';
 
+// 2026-07-28 gap-killer: format a window_start / window_end date (from
+// n2_revision_digests, stored as YYYY-MM-DD or full ISO) as "Jul 20 – Jul 26"
+// for the editorial meta line. Falls back to the raw string if parsing fails.
+function formatWindow(dateStr: string): string {
+  if (!dateStr) return '—';
+  try {
+    // Try YYYY-MM-DD first; if it has a T, strip the time portion.
+    const datePart = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    const d = new Date(datePart + 'T12:00:00+09:00');
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'Asia/Tokyo',
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
 type QuestionRow = {
   id: string;
   prompt: string | null;
@@ -73,16 +92,49 @@ export default async function RevisionPage() {
     timeZone: 'Asia/Tokyo',
   });
 
+  // 2026-07-28 gap-killer: compute IssueMeta values from digest.run_date
+  // so the masthead reads the digest's publication date (not today).
+  // /result/[date] already follows this pattern (sets metaDay/metaMonth
+  // from the date in question). For /revision, the latest digest's
+  // run_date is typically "yesterday" relative to a Mon-morning visit
+  // (digests publish Sun + Wed), and the window_start..window_end
+  // covers the prior Wed..Sun or Sun..Wed. The masthead should anchor
+  // to the run_date — same convention used by IssueMeta's default
+  // (today's date). Locks the masthead → page content coherence.
+  const dateObj = new Date(`${digest.run_date}T00:00:00+09:00`);
+  const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const metaDay = Number(dateObj.toLocaleDateString('en-US', { day: 'numeric', timeZone: 'Asia/Tokyo' }));
+  const metaMonth = MONTH_ABBR[Number(dateObj.toLocaleDateString('en-US', { month: 'numeric', timeZone: 'Asia/Tokyo' })) - 1];
+  const metaYear = dateObj.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'Asia/Tokyo' });
+  const metaYearTop = metaYear.slice(0, 2);
+  const metaYearBottom = metaYear.slice(2, 4);
+
   return (
     <TiltedCard>
-      <IssueMeta />
+      <IssueMeta day={metaDay} month={metaMonth} yearTop={metaYearTop} yearBottom={metaYearBottom} center="N2 Daily Mock" />
       <NavBar current="/revision" />
+      {/* 2026-07-28 gap-killer: card-section-kicker added above H2 for
+          cross-page editorial rhythm parity with /progress (kicker above
+          "Your progress") and /result/[date] sub-states (kicker above
+          the H2). /revision was jumping from NavBar straight to H2
+          with no kicker — the only auth-gated page missing one.
+          Sunday · Revision digest framing matches the §Per-page /revision
+          spec ("Sunday or Wednesday publication" cadence). Sans 11px / 500 /
+          tracked / uppercase / --text-3 — same DNA as NoMockToday
+          kicker. Locked tokens only. */}
+      <p className="card-section-kicker">
+        Sunday &middot; Revision digest
+      </p>
       <div className="card-page-header">
         <h2 className="card-h2">
           Today&rsquo;s revision
         </h2>
+        {/* 2026-07-28 gap-killer: format window_start / window_end with
+            formatWindow() — previously rendered as raw ISO strings
+            ("2026-07-20T00:00:00+09:00") instead of editorial date
+            format ("Jul 20 – Jul 26"). */}
         <div className="revision-meta">
-          {questions.length} questions people got wrong most often, {digest.window_start} – {digest.window_end}
+          {questions.length} questions people got wrong most often, {formatWindow(digest.window_start)} – {formatWindow(digest.window_end)}
         </div>
       </div>
 

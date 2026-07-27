@@ -71,6 +71,24 @@ export default async function LandingPage() {
     ? `Issue \u00b7 ${issueOrdinal} \u00b7 The morning paper`
     : `${today} \u00b7 The morning paper`;
 
+  // 2026-07-27 gap-killer (06:13 JST): issue number + formatted date for
+  // the new .card-h1-edition right-column mini-panel. Issue number is
+  // always the calculated ordinal (daysSinceStart + 1) regardless of
+  // whether today's mock is published — the edition number is a
+  // date-keyed concept, not a publication-state concept. Date is
+  // formatted as "Mon · 27 Jul 2026" to match the editorial-newspaper
+  // byline rhythm (short weekday + day + month + year).
+  const issueNumber = String(daysSinceStart + 1);
+  const editionDateLabel = new Date(`${today}T00:00:00+09:00`)
+    .toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Tokyo',
+    })
+    .replace(/,/g, '');
+
   if (session) {
     // Streak badge: design.md §Auth-gated page chrome locks the streak
     // pill at the top-left of the card body, below the IssueMeta strip.
@@ -83,6 +101,23 @@ export default async function LandingPage() {
       <TiltedCard>
         <IssueMeta />
         <NavBar current="/" />
+        {/* 2026-07-27 gap-killer: card-tagline italic kicker added for
+           cross-state parity with the logged-out branch. The
+           logged-out branch carries
+           <p className="card-tagline card-tagline--above">for serious
+           Japanese learners.</p> as the editorial subhead between
+           IssueMeta and the H1 row; the logged-in branch was going
+           straight from NavBar to StreakBadge with no italic kicker.
+           Copy: "Day {N} of the morning paper." — daily-ritual
+           language matching the page's "morning paper for serious
+           Japanese learners" framing (design.md §Genre: "JLPT N2
+           daily mock = the morning paper for serious Japanese
+           learners"). The ordinal is the same daysSinceStart value
+           already computed for the edition panel. Locked tokens only
+           (--font-serif, --text-2). */}
+        <p className="card-tagline card-tagline--above">
+          Day {daysSinceStart + 1} · of the morning paper.
+        </p>
         <header className="card-page-header card-page-header--bare">
           <StreakBadge count={streak} />
         </header>
@@ -114,8 +149,25 @@ export default async function LandingPage() {
         </div>
         <p className="card-h1-strapline">{straplineText}</p>
         <p className="card-lede">
-          Good morning. Five questions across reading, grammar, and vocabulary.
+          Good morning. Five questions across reading, grammar, vocabulary, kanji, and listening.
         </p>
+        {/* 2026-07-27 gap-killer (06:13 JST): right-column "Today's edition"
+            mini-panel. Fills the empty cream space between the H1 row
+            (where the aside already sits at the top-right) and the
+            callout/CTA below the lede. Anchors the right column with
+            structured editorial content (issue number + date + stats)
+            instead of leaving ~400×170px of cream empty above the phone
+            mockup. Same surface-2 + 3px accent-left-rule vocabulary as
+            .card-status-empty + .passage-quote. Hidden-class pattern
+            not needed — the panel stacks below the lede on mobile via
+            the existing card flow + the @media (max-width: 768px) rule
+            in globals.css that flips it to left-align. */}
+        <aside className="card-h1-edition">
+          <div className="card-h1-edition__kicker">Today&rsquo;s edition</div>
+          <div className="card-h1-edition__number">Issue {issueNumber}</div>
+          <div className="card-h1-edition__date">{editionDateLabel}</div>
+          <div className="card-h1-edition__stats">5 questions · 7 min · JLPT N2</div>
+        </aside>
         {todayMock ? (
           <>
             <Link href="/today" className="btn-primary">
@@ -237,18 +289,18 @@ export default async function LandingPage() {
           <span className="landing-colophon-flourish__rule" />
         </div>
 
-        <div className="landing-editorial-closing">
-          <p className="landing-editorial-closing__line">
-            Welcome back — by the editors of N2 Daily Mock, Tokyo.
-          </p>
-          <nav className="landing-editorial-closing__nav" aria-label="Imprint">
-            <Link href="/progress">Progress</Link>
-            <span aria-hidden="true">·</span>
-            <Link href="/revision">Revision</Link>
-            <span aria-hidden="true">·</span>
-            <Link href="/today">Today&rsquo;s mock</Link>
-          </nav>
-        </div>
+        {/* 2026-07-26 gap-killer: dropped the inner
+            <nav className="landing-editorial-closing__nav"> from the
+            logged-in branch — it duplicated 3 of the 5 destinations
+            already in NavBar at the top (Today's mock / Progress /
+            Revision). The card bottom is now less crowded; the top
+            NavBar remains the single navigation surface. The
+            editorial closing line is preserved as a 1-line editorial
+            credit so the bottom of the card still reads with a final
+            attribution. Locked tokens only. */}
+        <p className="landing-section-closing-note">
+          Welcome back — by the editors of N2 Daily Mock, Tokyo.
+        </p>
 
         <PhoneMockup />
       </TiltedCard>
@@ -286,9 +338,22 @@ export default async function LandingPage() {
       </div>
       <p className="card-h1-strapline">{straplineText}</p>
       <p className="card-lede">
-        Five questions across reading, grammar, and vocabulary — delivered
+        Five questions across reading, grammar, vocabulary, kanji, and listening — delivered
         every morning at 07:30 JST.
       </p>
+      {/* 2026-07-27 gap-killer (06:13 JST): right-column "Today's edition"
+          mini-panel. Fills the empty cream space between the H1 row
+          (where the aside sits at the top-right) and the CTA below the
+          lede. Same logic as the signed-in branch — issue number + date
+          + stats anchored in the right column above the phone mockup.
+          Surface-2 + 3px accent-left-rule + border-radius 4px — same
+          vocabulary as .card-status-empty and .passage-quote. */}
+      <aside className="card-h1-edition">
+        <div className="card-h1-edition__kicker">Today&rsquo;s edition</div>
+        <div className="card-h1-edition__number">Issue {issueNumber}</div>
+        <div className="card-h1-edition__date">{editionDateLabel}</div>
+        <div className="card-h1-edition__stats">5 questions · 7 min · JLPT N2</div>
+      </aside>
       <Link href="/auth" className="btn-primary">
         Sign in with email →
       </Link>
@@ -399,28 +464,21 @@ export default async function LandingPage() {
         <span className="landing-colophon-flourish__rule" />
       </div>
 
-      {/* 2026-07-22 gap-killer (09:11 JST): editorial closing band —
-          italic-serif signature line + small Privacy/Help footer link.
-          Fills the visible ~60px empty whitespace at the bottom-LEFT of
-          the landing card (between the colophon row and the card's
-          bottom edge). Mirrors the reference's bottom-of-page magazine
-          colophon (italic-serif attribution line above a small nav row).
-          Uses locked DNA tokens only (--hairline, --text-2, --accent).
-          No new design patterns; same italic-serif kicker + tracked-
-          sans micro-nav vocabulary used by .card-tagline and
-          .card-footer-nav on auth-gated pages. */}
-      <div className="landing-editorial-closing">
-        <p className="landing-editorial-closing__line">
-          Presented daily since 2026 — by the editors of N2 Daily Mock, Tokyo.
-        </p>
-        <nav className="landing-editorial-closing__nav" aria-label="Imprint">
-          <Link href="/privacy">Privacy</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/today">Today&rsquo;s mock</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/revision">Revision</Link>
-        </nav>
-      </div>
+      {/* 2026-07-26 gap-killer: dropped the inner
+          <nav className="landing-editorial-closing__nav"> from the
+          logged-out branch — Today's mock + Revision already live in
+          NavBar at the top; the Privacy destination moved to a small
+          text-only credit next to the editorial line for symmetry with
+          the logged-in branch (logged-in kept the editorial line, no
+          nav; logged-out now matches). Both branches of / now close
+          with a single line of editorial credit instead of an
+          attribution + nav row, so the bottom of the card reads with
+          one decisive attribution gesture rather than a redundant nav.
+          Locked tokens only. */}
+      <p className="landing-section-closing-note">
+        Presented daily since 2026 — Privacy:{' '}
+        <Link href="/privacy">your@email-only</Link>
+      </p>
 
       <PhoneMockup />
     </TiltedCard>
