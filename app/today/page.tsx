@@ -172,31 +172,36 @@ function NoMockToday({ date, streak }: { date: string; streak: number }) {
           本日のモックは準備中です — 07:30 JST 以降に再度ご確認ください。
         </p>
       </div>
-      {/* 2026-07-25 gap-killer: italic serif closing note before the
-          footer nav. Mirrors the / logged-out's landing-section-closing-
-          note ("presented daily at 07:30 JST — by the editors") pattern
-          — italic-serif aside that closes the page body with a small
-          editorial note. Closes the visible ~80px empty space between
-          the lede and the footer nav that was visible on desktop. Uses
-          locked tokens only (--font-serif, --text-3). Same class
-          already in globals.css from prior passes. */}
-      <p className="landing-section-closing-note">
-        公開までしばらくお待ちください — 編集チームより
-      </p>
       {/* 2026-07-27 gap-killer: editorial "Today's mock — at 07:30 JST"
-          preview block below the closing note. Mirrors the / landing's
-          "What you'll see" section (added 2026-07-19 20:07) so the
-          /today NoMockToday has the same compositional density as /
-          — single-section auth-gated pages previously read as
-          half-empty compared to the multi-section landing. The 3-row
-          preview (Reading / Grammar / Vocabulary) reuses the locked
-          .card-section + .landing-preview-list pattern with the
-          #1/#2/#3 serif accent counter prefix from .landing-preview-
-          list__label::before. The closing meta line ("Published daily
-          · 07:30 JST · 5 questions · 3 categories") reuses .landing-
-          preview-list__meta. No new CSS classes. --card-section--flush
-          keeps the bottom hairline from double-printing against the
-          footer-nav's own border-top. */}
+          preview block. Mirrors the / landing's "What you'll see"
+          section (added 2026-07-19 20:07) so the /today NoMockToday
+          has the same compositional density as / — single-section
+          auth-gated pages previously read as half-empty compared to
+          the multi-section landing. The 3-row preview (Reading /
+          Grammar / Vocabulary) reuses the locked .card-section +
+          .landing-preview-list pattern with the #1/#2/#3 serif accent
+          counter prefix from .landing-preview-list__label::before. The
+          closing meta line ("Published daily · 07:30 JST · 5 questions
+          · 3 categories") reuses .landing-preview-list__meta. No new
+          CSS classes. --card-section--flush keeps the bottom hairline
+          from double-printing against the footer-nav's own border-top.
+
+          2026-07-29 gap-killer (03:07 JST): the closing line that
+          previously sat BETWEEN the card-status-empty callout and this
+          preview section was moved AFTER the preview section (just
+          before the footer nav). The / landing places its closing line
+          ("Welcome back — by the editors of N2 Daily Mock, Tokyo." /
+          "Presented daily since 2026 — Privacy: ...") at the very
+          bottom of the card as a terminal signoff — the closing line
+          is the bottom-most content, with nothing after it. /today
+          NoMockToday had its closing line ("公開までしばらくお待ち
+          ください — 編集チームより") wedged in the middle of the page
+          (between the callout and the preview section), which broke
+          the cross-page compositional rhythm. Now the page order is
+          callout → preview section → closing line → footer nav,
+          matching the landing's callout (where present) → preview list
+          → colophon → closing line → footer nav (with the closing
+          line always last). */}
       <div className="card-section card-section--flush">
         <h3 className="card-section__heading card-h3">
           Today&rsquo;s mock &mdash; at 07:30 JST
@@ -225,6 +230,22 @@ function NoMockToday({ date, streak }: { date: string; streak: number }) {
           Published daily &middot; 07:30 JST &middot; 5 questions &middot; 3 categories
         </p>
       </div>
+      {/* 2026-07-25 gap-killer: italic serif closing note before the
+          footer nav. Mirrors the / logged-out's landing-section-closing-
+          note ("presented daily at 07:30 JST — by the editors") pattern
+          — italic-serif aside that closes the page body with a small
+          editorial note. Closes the visible ~80px empty space between
+          the lede and the footer nav that was visible on desktop. Uses
+          locked tokens only (--font-serif, --text-3). Same class
+          already in globals.css from prior passes.
+
+          2026-07-29 gap-killer (03:07 JST): moved from BEFORE the
+          preview section to AFTER it (see comment block above) for
+          cross-page compositional parity with / landing's terminal-
+          signoff pattern. */}
+      <p className="landing-section-closing-note">
+        公開までしばらくお待ちください — 編集チームより
+      </p>
       {/* 2026-07-23 gap-killer: card-footer-nav added for structural
           parity with /progress and /revision. NoMockToday previously
           had no footer affordance — other auth-gated empty-state pages

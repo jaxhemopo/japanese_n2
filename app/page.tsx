@@ -67,8 +67,15 @@ export default async function LandingPage() {
     ? String(daysSinceStart + 1)
     : today;
 
+  // 2026-07-28 gap-killer (15:20 JST): straplineText now omits the
+  // "Issue · N" prefix — that info was duplicating the issue number
+  // shown in the .card-h1-edition right-column mini-panel. When a
+  // mock is published, the strapline reads "The morning paper"; when
+  // no mock is published yet, it reads "2026-07-28 · The morning paper"
+  // (today's date acts as the temporal anchor for the unpublished
+  // state, matching the .card-status-empty callout's date anchor).
   const straplineText = todayMock
-    ? `Issue \u00b7 ${issueOrdinal} \u00b7 The morning paper`
+    ? `The morning paper`
     : `${today} \u00b7 The morning paper`;
 
   // 2026-07-27 gap-killer (06:13 JST): issue number + formatted date for
@@ -115,75 +122,122 @@ export default async function LandingPage() {
            learners"). The ordinal is the same daysSinceStart value
            already computed for the edition panel. Locked tokens only
            (--font-serif, --text-2). */}
-        <p className="card-tagline card-tagline--above">
-          Day {daysSinceStart + 1} · of the morning paper.
-        </p>
-        <header className="card-page-header card-page-header--bare">
-          <StreakBadge count={streak} />
-        </header>
-        {/* 2026-07-25 gap-killer (06:39 JST): added card-h1-row + card-h1-aside
-            to the logged-in branch for H1 row balance. The logged-out branch
-            already wraps its H1 in <div className="card-h1-row"> with a
-            <aside className="card-h1-aside">est. 2026 / tokyo · jp</aside>
-            on the right side. The logged-in branch was missing both —
-            rendering the H1 as a left-aligned block with empty right-half
-            space above the phone mockup. Now uses the same idiom so the
-            H1 row reads as a balanced editorial composition across both
-            auth states. The aside content is locked (same line as the
-            logged-out branch) — the design.md §Landing per-page spec
-            doesn't mandate it but the cross-state parity is a visible
-            DNA miss. */}
-        <div className="card-h1-row">
-          <h1 className="card-h1">
-            Today&rsquo;s N2
-            <br />
-            mock
-          </h1>
-          <aside className="card-h1-aside">
-            Vol. I
-            <br />
-            est. 2026
-            <br />
-            tokyo · jp
-          </aside>
+        {/* 2026-07-28 gap-killer (09:15 JST): wrap the kicker + StreakBadge
+           in a horizontal flex row (kicker left, badge right) so the
+           chrome above the H1 reads as a single tight editorial band
+           rather than 2 stacked elements. The StreakBadge's parent
+           <header> retains its border-bottom hairline as the section
+           break above the H1 row. .card-kicker-badge-row class in
+           globals.css handles the layout (display: flex, baseline-
+           aligned, space-between). */}
+        <div className="card-kicker-badge-row">
+          {/* 2026-07-29 gap-killer: StreakBadge now first (top-LEFT,
+              per design.md §Auth-gated page chrome — "Streak badge
+              sits at the top-left of the card body, below the
+              IssueMeta strip"). Previous order (kicker → badge) put
+              the badge at top-right of the .card-kicker-badge-row via
+              justify-content: space-between. Swapping the JSX order
+              swaps the visual position without changing the CSS
+              class — locked tokens unchanged. The italic kicker
+              ("Day N · of the morning paper.") now sits on the right
+              of the row, mirroring the editorial-newspaper
+              byline-on-the-right masthead rhythm. */}
+          <header className="card-page-header card-page-header--bare">
+            <StreakBadge count={streak} />
+          </header>
+          <p className="card-tagline card-tagline--above">
+            Day {daysSinceStart + 1} · of the morning paper.
+          </p>
         </div>
+        {/* 2026-07-28 gap-killer (09:15 JST): the right side of the H1 row
+           now wraps both the Vol. I aside AND the Today's edition
+           mini-panel in a single .card-h1-right flex column. Previously
+           these were 2 disconnected right-column elements at different
+           vertical levels (Vol. I at H1-row level, mini-panel at
+           lede-level) — the right column read as fragmented. Now both
+           sit as siblings inside .card-h1-right with the column's gap
+           (16px) between them, anchored to the right edge of the card.
+           The mini-panel moves UP from lede-level to H1-row level; the
+           lede below now sits alone (max 480px width) without a
+           mini-panel competing for the right column. */}
+        <div className="card-h1-row">
+          {/* 2026-07-29 gap-killer (03:07 JST): re-added the <br /> after
+              "Today's" so the H1 wraps as "TODAY'S" / "N2 MOCK" instead
+              of the natural-wrap "TODAY'S N2" / "MOCK". The natural
+              wrap leaves "MOCK" alone on line 2 (a 4-character line
+              under a 10-character line — 85:35 visual ratio). The
+              forced break gives both lines ~7 characters (60:60 ratio)
+              — visually balanced and reads as a proper masthead with
+              2 stacked editorial credits. The 2026-07-28 15:20 JST
+              pass removed the <br /> to allow natural wrap, but the
+              natural wrap produced the imbalanced 85:35 split. Forced
+              <br /> is the right call for cross-page masthead rhythm
+              parity with the reference dailydispatch's 3-line "DAILY
+              BRIEFINGS / ON ANY TOPICS / YOU FOLLOW" composition
+              (3 lines all roughly the same width). */}
+          <h1 className="card-h1">
+            Today&rsquo;s<br />N2 mock
+          </h1>
+          <div className="card-h1-right">
+            <aside className="card-h1-aside">
+              Vol. I
+              <br />
+              est. 2026
+              <br />
+              tokyo · jp
+            </aside>
+            <aside className="card-h1-edition">
+              <div className="card-h1-edition__kicker">Today&rsquo;s edition</div>
+              <div className="card-h1-edition__number">Issue {issueNumber}</div>
+              <div className="card-h1-edition__date">{editionDateLabel}</div>
+              <div className="card-h1-edition__stats">5 questions · 7 min · JLPT N2</div>
+            </aside>
+          </div>
+        </div>
+        {/* 2026-07-28 gap-killer (15:20 JST): strapline now reads
+           "The morning paper" — the "Issue · N" prefix is removed
+           to avoid duplicating the issue number shown in the right-
+           column .card-h1-edition__number mini-panel. The 3-line
+           typographic stack (H1 / strapline / lede) is preserved. */}
         <p className="card-h1-strapline">{straplineText}</p>
+        {/* 2026-07-29 gap-killer: lede now matches the logged-out
+            branch's locked-spec copy ("Five questions across reading,
+            grammar, vocabulary, kanji, and listening — delivered every
+            morning at 07:30 JST."). Previously: "Good morning. Five
+            questions across reading, grammar, vocabulary, kanji, and
+            listening." — added a "Good morning." prefix and dropped
+            the "delivered every morning at 07:30 JST" suffix per
+            design.md §Per-page `/` spec. The signed-in and signed-out
+            branches now share the same lede copy, eliminating the
+            cross-auth-state copy drift flagged in every prior gap-
+            killer pass since 2026-07-20 (47+ prior passes logged the
+            drift as "content copy, not visual DNA" — this pass
+            closes it as part of the cross-page consistency goal). */}
         <p className="card-lede">
-          Good morning. Five questions across reading, grammar, vocabulary, kanji, and listening.
+          Five questions across reading, grammar, vocabulary, kanji, and listening — delivered
+          every morning at 07:30 JST.
         </p>
-        {/* 2026-07-27 gap-killer (06:13 JST): right-column "Today's edition"
-            mini-panel. Fills the empty cream space between the H1 row
-            (where the aside already sits at the top-right) and the
-            callout/CTA below the lede. Anchors the right column with
-            structured editorial content (issue number + date + stats)
-            instead of leaving ~400×170px of cream empty above the phone
-            mockup. Same surface-2 + 3px accent-left-rule vocabulary as
-            .card-status-empty + .passage-quote. Hidden-class pattern
-            not needed — the panel stacks below the lede on mobile via
-            the existing card flow + the @media (max-width: 768px) rule
-            in globals.css that flips it to left-align. */}
-        <aside className="card-h1-edition">
-          <div className="card-h1-edition__kicker">Today&rsquo;s edition</div>
-          <div className="card-h1-edition__number">Issue {issueNumber}</div>
-          <div className="card-h1-edition__date">{editionDateLabel}</div>
-          <div className="card-h1-edition__stats">5 questions · 7 min · JLPT N2</div>
-        </aside>
         {todayMock ? (
           <>
-            <Link href="/today" className="btn-primary">
-              Begin today&rsquo;s mock →
-            </Link>
-            {/* 2026-07-25 gap-killer (09:16 JST): added card-secondary
-                supporting sub-line to the logged-in branch for cross-state
-                structural parity with the logged-out branch (which has
-                "First time? Pick a password when you sign up — takes 12
-                seconds." under its CTA). The logged-in branch had no
-                supporting copy under its "Begin today's mock →" button —
-                logged-out users got an editorial aside about what to expect,
-                logged-in users got nothing. Copy: "Welcome back. Today's
-                mock is ready when you are." — same .card-secondary class
-                (sans 13 / #6F6D63) so no visual treatment change, just
-                cross-state structural parity. */}
+            {/* 2026-07-28 gap-killer (09:15 JST): wrap the CTA + supporting
+               secondary copy in a horizontal flex row (.card-cta-row)
+               with the CTA on the left and an italic-serif editorial
+               by-line on the right ("← Today's edition · Issue {N}").
+               Previously the CTA sat alone in the left column with empty
+               cream to its right (where the mini-panel used to be at
+               lede-level). Now the action block reads as a balanced
+               2-element composition: button + by-line, mirroring the
+               editorial-newspaper byline rhythm. The by-line uses the
+               locked .card-cta-byline class (serif italic 13px / --text-2)
+               so it pairs visually with .card-h1-strapline + .card-tagline. */}
+            <div className="card-cta-row">
+              <Link href="/today" className="btn-primary">
+                Begin today&rsquo;s mock →
+              </Link>
+              <span className="card-cta-byline">
+                ← Today&rsquo;s edition · Issue {issueNumber}
+              </span>
+            </div>
             <p className="card-secondary">
               Welcome back. Today&rsquo;s mock is ready when you are.
             </p>
@@ -263,9 +317,6 @@ export default async function LandingPage() {
           <div className="landing-preview-list__meta">
             ~7 minutes · 5 questions · scored instantly
           </div>
-          <p className="landing-section-closing-note">
-            presented daily at 07:30 JST — by the editors
-          </p>
         </section>
 
         <section className="landing-colophon" aria-label="Publication facts">
@@ -315,48 +366,46 @@ export default async function LandingPage() {
       </p>
       <div className="card-h1-row">
         <h1 className="card-h1">
-          Today&rsquo;s N2
-          <br />
-          mock
+          Today&rsquo;s<br />N2 mock
         </h1>
-        {/* 2026-07-23 gap-killer: editorial aside in the upper-right of
-            the landing card. Balances the left-heavy H1 composition by
-            filling the empty right-half space above the phone mockup
-            with a subtle italic-serif publication credit. Mirrors the
-            reference dailydispatch's masthead-aside rhythm — the
-            reference has a small italic line to the right of its
-            giant H1 ("Personalized knowledge, curated by you" sits
-            below the H1, but the reference's overall composition has
-            editorial substance throughout the upper viewport). */}
-        <aside className="card-h1-aside">
-          Vol. I
-          <br />
-          est. 2026
-          <br />
-          tokyo · jp
-        </aside>
+        {/* 2026-07-28 gap-killer (09:15 JST): same right-column consolidation
+           as the logged-in branch — wrap the Vol. I aside + Today's edition
+           mini-panel in a single .card-h1-right flex column at H1-row
+           level. */}
+        <div className="card-h1-right">
+          <aside className="card-h1-aside">
+            Vol. I
+            <br />
+            est. 2026
+            <br />
+            tokyo · jp
+          </aside>
+          <aside className="card-h1-edition">
+            <div className="card-h1-edition__kicker">Today&rsquo;s edition</div>
+            <div className="card-h1-edition__number">Issue {issueNumber}</div>
+            <div className="card-h1-edition__date">{editionDateLabel}</div>
+            <div className="card-h1-edition__stats">5 questions · 7 min · JLPT N2</div>
+          </aside>
+        </div>
       </div>
+      {/* 2026-07-28 gap-killer (15:20 JST): strapline reads "The
+         morning paper" — the "Issue · N" prefix is removed to
+         avoid duplicating the issue number shown in the right-
+         column .card-h1-edition__number mini-panel. Shared
+         straplineText with the logged-in branch. */}
       <p className="card-h1-strapline">{straplineText}</p>
       <p className="card-lede">
         Five questions across reading, grammar, vocabulary, kanji, and listening — delivered
         every morning at 07:30 JST.
       </p>
-      {/* 2026-07-27 gap-killer (06:13 JST): right-column "Today's edition"
-          mini-panel. Fills the empty cream space between the H1 row
-          (where the aside sits at the top-right) and the CTA below the
-          lede. Same logic as the signed-in branch — issue number + date
-          + stats anchored in the right column above the phone mockup.
-          Surface-2 + 3px accent-left-rule + border-radius 4px — same
-          vocabulary as .card-status-empty and .passage-quote. */}
-      <aside className="card-h1-edition">
-        <div className="card-h1-edition__kicker">Today&rsquo;s edition</div>
-        <div className="card-h1-edition__number">Issue {issueNumber}</div>
-        <div className="card-h1-edition__date">{editionDateLabel}</div>
-        <div className="card-h1-edition__stats">5 questions · 7 min · JLPT N2</div>
-      </aside>
-      <Link href="/auth" className="btn-primary">
-        Sign in with email →
-      </Link>
+      <div className="card-cta-row">
+        <Link href="/auth" className="btn-primary">
+          Sign in with email →
+        </Link>
+        <span className="card-cta-byline">
+          ← Today&rsquo;s edition · Issue {issueNumber}
+        </span>
+      </div>
       {/* 2026-07-23 gap-killer: card-secondary copy updated to match
           the actual password-based auth flow. The previous "No
           password. We'll send you a magic link." wording was a
@@ -404,16 +453,13 @@ export default async function LandingPage() {
         <div className="landing-preview-list__meta">
           ~7 minutes · 5 questions · scored instantly
         </div>
-        {/* 2026-07-23 gap-killer: editorial section closing note below
-            the meta line — italic-serif aside that closes the "What
-            you'll see" index with a small publication-time credit.
-            Mirrors the reference dailydispatch's section-break rhythm:
-            each section ends with a small italic editorial line above
-            the next hairline divider. Uses locked DNA tokens only
-            (--font-serif, --text-3). */}
-        <p className="landing-section-closing-note">
-          presented daily at 07:30 JST — by the editors
-        </p>
+        {/* 2026-07-28 gap-killer: dropped the above-colophon "presented
+            daily at 07:30 JST — by the editors" italic-section-closing-note.
+            The below-colophon editorial-closing line ("Presented daily
+            since 2026 — Privacy: ...") already carries the publication
+            attribution + time schedule; the above-colophon variant read
+            as a duplicate "by the editors" italic closing within ~50px
+            of the canonical closing-line on the most prominent page. */}
       </section>
 
       <section className="landing-colophon" aria-label="Publication facts">

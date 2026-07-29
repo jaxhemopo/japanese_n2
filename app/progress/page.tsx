@@ -10,10 +10,12 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerSupabase } from '@/lib/supabase';
+import { computeStreak } from '@/lib/streak';
 import { subtypeLabel } from '@/lib/subtype-labels';
 import { IssueMeta } from '@/components/IssueMeta';
 import { TiltedCard } from '@/components/TiltedCard';
 import { PullQuote } from '@/components/PullQuote';
+import { StreakBadge } from '@/components/StreakBadge';
 import { NavBar } from '@/components/NavBar';
 
 function toJSTDateString(d: Date): string {
@@ -96,6 +98,16 @@ export default async function ProgressPage() {
   }
   const activeDays = days.filter((d) => d.count > 0).length;
 
+  // 2026-07-29 gap-killer: StreakBadge fetch — design.md
+  // §Auth-gated page chrome locks the streak pill at the top-left of
+  // the card body, below the IssueMeta strip, on EVERY auth-gated
+  // page (/today, /progress, /revision, /result/[date]). /progress
+  // was the only auth-gated page missing the StreakBadge — the page
+  // renders the user's all-time stats but had no daily-ritual
+  // reinforcement at the top. computeStreak is the same SQL-count
+  // over n2_attempts call used by /today and /result/[date].
+  const streak = await computeStreak(supabase, user.id);
+
   function activityClass(count: number): string {
     if (count === 0) return 'activity-cell--none';
     if (count <= 2) return 'activity-cell--low';
@@ -107,7 +119,18 @@ export default async function ProgressPage() {
     <TiltedCard>
       <IssueMeta />
       <NavBar current="/progress" />
+      {/* 2026-07-29 gap-killer: StreakBadge now appears at the top-
+          left of the card body per design.md §Auth-gated page chrome
+          spec — uses the same .result-header-row + .result-header-row
+          __label pair pattern as /result/[date] (StreakBadge on the
+          left, sans-uppercase-tracked label "All-time streak" on the
+          right). The H2 + .progress-meta below the row are unchanged
+          from the prior pass. Locked tokens only. */}
       <header className="card-page-header">
+        <div className="result-header-row">
+          <StreakBadge count={streak} />
+          <span className="result-header-row__label">All-time streak</span>
+        </div>
         <h2 className="card-h2">Your progress</h2>
         {/* 2026-07-23 gap-killer: structural-parity meta line below
             "Your progress" H2. Sibling auth-gated pages (/revision,

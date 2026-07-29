@@ -394,6 +394,16 @@ button {
   margin: 8px 0 0;
 }
 
+/* 2026-07-28 gap-killer (09:15 JST): when .card-secondary sits inside
+   .card-cta-row, suppress its own top margin so the flex container's
+   gap (24px desktop / 10px mobile) + the CTA's natural rhythm define
+   the spacing. Previously the secondary line had its own margin-top
+   from the original stacked layout; inside the flex row it should
+   sit flush below the CTA. */
+.card-cta-row .card-secondary {
+  margin: 0;
+}
+
 /* ──────── phone mockup (landing only) ──────── */
 
 .phone-mockup {
@@ -616,6 +626,165 @@ button {
   }
 }
 
+/* ──────── card-kicker-badge-row: kicker + streak badge horizontal pair (locked on / logged-in) ────────
+   2026-07-28 gap-killer (09:15 JST): consolidate the "Day N · of the
+   morning paper." italic kicker and the StreakBadge into a single
+   horizontal row (kicker left, badge right) so the chrome above the
+   H1 reads as a tight editorial band rather than 2 stacked elements.
+   The StreakBadge's parent <header className="card-page-header--bare">
+   retains its border-bottom hairline as the section break above the
+   H1 row. align-items: baseline keeps the kicker's italic baseline
+   flush with the badge's text baseline. The kicker's --above negative
+   bottom margin is suppressed (margin: 0) inside the flex container
+   so the flex gap is the only spacing rhythm.
+
+   Tokens used (all locked): --font-serif, --text-2, --font-sans. */
+
+.card-kicker-badge-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.card-kicker-badge-row .card-tagline--above {
+  margin: 0;
+}
+
+/* ──────── card-cta-row: CTA + editorial by-line horizontal pair (locked on /) ────────
+   2026-07-28 gap-killer (09:15 JST): pair the .btn-primary "Begin
+   today's mock →" CTA with a small italic-serif editorial by-line on
+   the right ("← Today's edition · Issue {N}" or similar), so the
+   primary action sits inside a balanced 2-element composition rather
+   than as a lonely button in the left column. Same locking vocabulary
+   as .card-kicker-badge-row above — flex row, baseline-aligned,
+   kicker-style by-line on the right using the locked serif-italic /
+   --text-2 / 13px rhythm from .landing-section-closing-note.
+
+   Tokens used (all locked): --font-serif, --text-2, --accent. */
+
+.card-cta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.card-cta-byline {
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+  color: var(--text-2);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .card-cta-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .card-cta-byline {
+    text-align: left;
+  }
+}
+
+/* ──────── card-h1-right: right-column flex column wrapper (locked on /) ────────
+   2026-07-28 gap-killer (09:15 JST): consolidates the .card-h1-aside
+   ("Vol. I / est. 2026 / tokyo · jp") and the .card-h1-edition
+   ("Today's edition / Issue 15 / ...") into a single dense editorial
+   block on the right side of the H1 row. Previously these were 2
+   disconnected right-column elements at different vertical levels
+   (Vol. I at H1-row level, mini-panel at lede-level), with the strapline
+   and lede crossing full-width between them. Now both sit as siblings
+   inside .card-h1-right — a flex column with align-items: flex-end so
+   the right edge stays anchored. The mini-panel moves up from lede-level
+   to H1-row level; the lede below it now sits alone (full width up to
+   its 480px max). Single source-of-truth right column above the phone
+   mockup: Vol. I aside + edition mini-panel stacked tightly with the
+   same editorial-newspaper byline rhythm.
+
+   Mobile: stacks below the H1 (since .card-h1-row becomes column at
+   768px), left-aligned, full width. The mini-panel's existing
+   240px max-width is overridden to none on mobile.
+
+   Tokens used (all locked): no new colors or fonts introduced — just
+   the locked --accent / --surface-2 / --text-2 / --text-3 from the
+   .card-h1-aside + .card-h1-edition vocabulary. */
+
+.card-h1-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+  flex-shrink: 0;
+  max-width: 240px;
+}
+
+.card-h1-right .card-h1-aside {
+  /* Override the original card-h1-row position: in the consolidated
+     flex column the aside sits at the top with no H1-adjacent baseline
+     alignment (the H1 is now to the LEFT of .card-h1-right, not above
+     it). Drop the aside's H1-baseline padding-top so the 2 right-column
+     children stack flush with their natural top edges. */
+  padding-top: 0;
+}
+
+.card-h1-right .card-h1-edition {
+  /* Override the original lede-row positioning (margin-left: auto +
+     margin-bottom: 24px) so the mini-panel sits flush inside the flex
+     column with no auto margin / no extra bottom margin (the column's
+     own gap handles spacing). */
+  margin-left: 0;
+  margin-bottom: 0;
+  max-width: none;
+  /* 2026-07-29 gap-killer (03:07 JST): add a hairline rule + padding
+     above the mini-panel so it reads as a distinct editorial block
+     separated from the "Vol. I" italic-serif aside above. The 2 right-
+     column children (.card-h1-aside + .card-h1-edition) were floating
+     in the same cream with only a 16px flex-column gap between them
+     — visually reading as one continuous block rather than as
+     "publication credit + today's edition info". The hairline frames
+     the mini-panel as a specific edition block (kicker / number /
+     date / hairline / stats) distinct from the publication credit
+     above. Editorial-newspaper genre marker: a hairline rule between
+     the masthead credit and the day's edition info. The mini-panel's
+     own internal hairline (between __date and __stats via the
+     .card-h1-edition__stats border-top) is preserved — the mini-
+     panel now has 2 hairlines: one above (separating from aside) and
+     one inside (between date and stats). The flex-column's 16px gap
+     becomes 16px + 1px hairline + 14px padding-top = 31px effective
+     visual separation, replacing the 16px alone. Locked tokens only
+     (--hairline). */
+  border-top: 1px solid var(--hairline);
+  padding-top: 14px;
+}
+
+@media (max-width: 768px) {
+  .card-h1-right {
+    align-items: flex-start;
+    max-width: none;
+    width: 100%;
+    gap: 12px;
+  }
+  .card-h1-right .card-h1-edition {
+    text-align: left;
+    margin-left: 0;
+    margin-bottom: 0;
+    max-width: none;
+  }
+  .card-h1-right .card-h1-aside {
+    text-align: left;
+    font-size: 12px;
+  }
+}
+
 /* ──────── card-h1-row + card-h1-aside: editorial masthead-aside (locked on /) ────────
    The landing card's H1 sits in the upper-LEFT of the warm card surface
    with the phone mockup overlapping the bottom-RIGHT corner — this
@@ -719,22 +888,49 @@ button {
   text-align: right;
   max-width: 240px;
   margin-left: auto;
-  margin-bottom: 24px;
-  padding: 14px 16px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: 4px;
+  margin-bottom: 0;
+  /* 2026-07-28 gap-killer (15:20 JST): flattened the mini-panel from
+     a boxed sub-card (surface-2 bg + border + accent-left-rule +
+     padding) to a flat text-only aside. The boxed appearance read as
+     a "card-on-card" callout competing with the 64px H1 masthead for
+     visual attention — editorial-newspaper genre expects the masthead
+     row to be flat typography only. Now sits flush in the right
+     column matching the Vol. I aside vocabulary: italic-serif +
+     tracked uppercase meta labels + accent number, no surface-2
+     fill, no border, no padding. The accent green on the Issue
+     number retains the only saturated color in the right column,
+     preserving the "edition badge" visual cue without the boxed
+     frame. Locked tokens only (--font-serif, --font-sans, --accent,
+     --text-2). */
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-left: 0;
+  border-radius: 0;
 }
 
 .card-h1-edition__kicker {
-  font-size: 10px;
+  /* 2026-07-28 gap-killer (21:05 JST): font-size 10→12px per
+     design.md §Typography "Meta / labels | sans | 12px /
+     11px" locked spec. The "TODAY'S EDITION" kicker
+     inside the right-column mini-panel was 10px — 2px
+     smaller than every other meta-label on the card
+     (.landing-colophon__label, .stat-card__label,
+     .result-question-card__num, .result-header-row__label,
+     .activity-calendar-legend — all 12px). At 10px it
+     read as a sub-meta micro-label rather than as the
+     section-anchor kicker the spec intends. Bumping to
+     12px aligns the kicker with the locked meta-label
+     register. Color stays at --text-2 (measured-audit
+     contrast override — --text-3 on --surface fails
+     WCAG 4.5:1). Letter-spacing stays at 1.5px
+     (slightly tighter than the spec's 1.2px to keep
+     the uppercase label compact inside the 240px
+     mini-panel width). */
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  /* 2026-07-27 measured-audit: --text-3 (#8A8880) on --surface-2 (#ECE8DD)
-     = 2.89:1 — fails WCAG 4.5:1. Override to --text-2 (#5B5A54) = 4.87:1.
-     Locked --text-3 token preserved everywhere else. */
   color: var(--text-2);
   margin-bottom: 4px;
 }
@@ -746,7 +942,24 @@ button {
   font-weight: 600;
   line-height: 1.0;
   letter-spacing: -0.02em;
-  color: var(--accent);
+  /* 2026-07-28 gap-killer (21:05 JST): color --accent→--text.
+     The "Issue 15" number was the largest saturated-green
+     element on / (28px serif / 600), competing with the
+     primary CTA for visual attention while reading as a
+     "callout badge" rather than as editorial metadata.
+     design.md §What NOT to do locks --accent to "primary
+     CTA + section anchor dot" only. The 28px serif 600
+     weight is already substantial enough to be the
+     right-column focal point without additional saturation
+     — the surrounding kicker / date / stats are all in
+     --text-2 muted dark, so reducing the Issue number to
+     --text makes the row read as a consistent editorial
+     metadata block (issue number + date + stats) rather
+     than a green badge + dark metadata. The accent green
+     on the card is now reserved for the primary CTA and
+     the "● What you'll see" H2 dot prefix per the locked
+     spec. */
+  color: var(--text);
   margin-bottom: 4px;
 }
 
@@ -796,15 +1009,17 @@ button {
   letter-spacing: -0.005em;
   color: var(--text-3);
   text-align: center;
-  /* 2026-07-25 gap-killer: margin-top 14→10px + padding-top 10→8px —
-     tighten the editorial section break between the "~7 MINUTES · 5
-     QUESTIONS · SCORED INSTANTLY" meta line and the closing note. The
-     previous 14+10+1=25px gap was visibly airier than the reference
-     dailydispatch's section break rhythm; tightening to 10+8+1=19px
-     keeps the hairline rule as the primary divider and reduces the
-     meta → closing note gap by 6px. Mobile overrides scale to match. */
-  margin: 10px 0 0;
-  padding-top: 8px;
+  /* 2026-07-28 gap-killer (00:07 JST): margin-top 10→6px + padding-top 8→6px —
+     tighten the cross-page editorial section break between the preceding
+     hairline divider (colophon-row / card-section / PullQuote) and the
+     closing-note text. The 10+8+1=19px gap was visible as a small
+     empty cream band separating the hairline from the italic text;
+     tightening to 6+6+1=13px (~32% reduction) brings the closing-note
+     right under its hairline rule. Matches editorial-newspaper footer
+     rhythm where italic sentence-text hugs the hairline divider.
+     Mobile overrides scale to match. */
+  margin: 6px 0 0;
+  padding-top: 6px;
   border-top: 1px solid var(--border);
 }
 
@@ -826,8 +1041,8 @@ button {
 @media (max-width: 768px) {
   .landing-section-closing-note {
     font-size: 11px;
-    margin-top: 10px;
-    padding-top: 8px;
+    margin-top: 6px;
+    padding-top: 6px;
   }
 }
 
@@ -1576,15 +1791,32 @@ button {
 
 /* ──────── subtype row (locked on /progress) ──────── */
 
+/* subtype-row: each accuracy row in the /progress "By question type" table.
+   2026-07-28 gap-killer (00:07 JST): promoted from boxed mini-card
+   (1px border + 8px radius + surface bg per row) to hairline-divider
+   row (transparent bg, hairline-bottom only). The previous boxed
+   treatment produced 8 separate mini-cards stacked with 0px gap,
+   reading as "8 stacked cards" rather than one continuous editorial
+   table — visually inconsistent with the hairline-divider pattern
+   used by .landing-preview-list li on / (the same genre marker:
+   editorial-newspaper index of items). Now reads as one continuous
+   table block; per-row breathing room preserved via padding 10px 14px.
+   Last row's trailing hairline suppressed via :last-child so the table
+   doesn't end with a divider hanging in empty cream. Locked tokens only
+   (--hairline, --text, --text-2). */
+
 .subtype-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
+  border-bottom: 1px solid var(--hairline);
+  background: transparent;
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.subtype-row:last-child {
+  border-bottom: 0;
 }
 
 .subtype-row__label {
@@ -2261,6 +2493,15 @@ button {
   font-weight: 500;
 }
 
+@media (max-width: 768px) {
+  .activity-calendar-legend__caption {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+  }
+}
+
 /* ──────── result header row (locked on /result/[date]) ──────── */
 
 .result-header-row {
@@ -2365,33 +2606,33 @@ button {
   content: "#" counter(landing-index);
   display: inline-block;
   font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
-  /* 2026-07-28 gap-killer (00:05 JST): font-size 18→20px,
-     font-weight 600→700, min-width 28→32px. The "#1..#5"
-     counter prefixes on the landing preview list were 18px
-     / 600 / min-width 28px — the second-smallest typography
-     element on the card (after the phone-mockup screen
-     text). At 18px they read as decorative index markers
-     rather than primary editorial anchors. The reference
-     dailydispatch's editorial-newspaper genre uses LARGE
-     serif numerals as the primary visual anchor for each
-     list row (e.g., "By the time you wake up — 1. Google
-     news / 2. AI summaries / 3. Social media" pattern).
-     Bumping to 20px + 700 weight + 32px min-width makes the
-     counters read as substantial editorial anchors visible
-     against the warm card surface — same typographic weight
-     as the .result-score-value (56px serif / 600) but at
-     smaller counter size. Mobile override stays at 16px
-     per the @media below — the smaller mobile spec keeps
-     the list compact on 375px viewports. Locked tokens
-     unchanged (font-family, color, letter-spacing all
-     preserved). */
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--accent);
+  /* 2026-07-28 gap-killer (21:05 JST): color --accent→--text-2,
+     font-weight 700→600, font-size 20→18px, min-width 32→28px.
+     The "#1..#5" counter prefixes were 20px / 700 weight /
+     --accent (saturated green) — a clear DNA miss vs the
+     locked editorial-newspaper genre. The accent overuse
+     added up across the page: CTA (--accent fill) +
+     accent-dot prefix on H2 (--accent circle) + "Issue
+     15" right-column (--accent 28px serif) + 5× these
+     counters (--accent 20px serif 700) = 8 saturated green
+     accents on a single landing card. design.md §What
+     NOT to do locks "No neon accents. The only saturated
+     color is the deep-green --accent" and reserves
+     --accent for "primary CTA" + "section anchor dot".
+     The 5 list numerals were neither. Now 18px / 600 /
+     --text-2 — same muted editorial-numeral register as
+     /revision's .revision-type-label (which is also #1..#5
+     in --text-3) and the rest of the card's metadata.
+     Mobile override stays at 16px / --text-2 per the
+     @media below — the list stays compact on 375px
+     viewports. Locked --accent token preserved. */
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-2);
   margin-right: 10px;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-  min-width: 32px;
+  min-width: 28px;
 }
 
 @media (max-width: 768px) {
@@ -2454,7 +2695,7 @@ button {
 
 @media (max-width: 768px) {
   .stat-card-grid {
-    grid-template-columns: repeat(3, minmax(100px, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2542,6 +2783,19 @@ button {
 }
 
 /* ──────── result score display (locked on /result/[date]) ──────── */
+
+/* ──────── result score panel wrapper (locked on /result/[date]) ───────-
+   2026-07-28 gap-killer: .score-panel was referenced in
+   app/result/[date]/page.tsx but had no CSS definition — falling back
+   to browser defaults (no spacing constraints). Now defined with locked
+   DNA: max-width 480px (matches the editorial-newspaper single-column
+   reading width), centered within the card-section. The children
+   (.result-score-label, .result-score-value, etc.) carry the actual
+   score typography. */
+.score-panel {
+  max-width: 480px;
+  margin: 0 auto;
+}
 
 .result-score-label {
   font-family: var(--font-sans), system-ui, sans-serif;
@@ -2645,6 +2899,18 @@ button {
   font-weight: 500;
 }
 
+/* 2026-07-29 gap-killer: middle-dot separator between stats items.
+   The flex gap (16px) provides the primary spacing; ::before adds the
+   editorial-newspaper middle-dot (·) as a visual rhythm marker — matching
+   the dailydispatch "X · Y · Z" style used in stat/label rows.
+   The ::before of the SECOND and THIRD spans appears to the LEFT of
+   each span (before its content), creating: correct[·]wrong[·]time.
+   .result-score-stats uses display:flex so pseudo-elements flow in
+   the inline axis between flex items. color: var(--text-3) keeps the
+   dot subtle. */
+.result-score-stats__wrong::before { content: " \b7 "; color: var(--text-3); }
+.result-score-stats__time::before   { content: " \b7 "; color: var(--text-3); }
+
 .result-score-stats__time {
   color: var(--text-2);
   font-weight: 500;
@@ -2669,6 +2935,52 @@ button {
 .revision-article-list {
   display: flex;
   flex-direction: column;
+}
+
+/* ──────── revision article inner elements (locked on /revision) ────────
+   2026-07-28 gap-killer: .revision-type-label, .revision-prompt, and
+   .revision-answer were referenced in app/revision/page.tsx but had no
+   CSS definitions — falling back to browser defaults. Each is now defined
+   with the locked typography spec. .revision-type-label: sans 12px / 500 /
+   tracked 1.2px / uppercase / --text-3 — matches the §Typography meta-label
+   row and pairs with .revision-meta above. .revision-prompt: serif h3
+   18px / 500 / line-height 1.25 / letter-spacing -0.005em — matches the
+   §Typography H3 spec and design.md §/revision "serif question preview".
+   .revision-answer: sans 14px / 400 / line-height 1.55 / --text — matches
+   the §Typography body spec. .revision-type-label gets mobile step-down
+   to 11px via the existing @media block (same pattern as .revision-meta). */
+
+.revision-type-label {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 8px;
+}
+
+.revision-prompt {
+  font-family: var(--font-serif), 'Noto Serif JP', Georgia, serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+
+.revision-answer {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+
+.revision-answer strong {
+  font-weight: 700;
 }
 
 /* subtype-list — wraps subtype-row items on /progress. No gap: each subtype-row
@@ -2705,11 +3017,38 @@ button {
   padding-bottom: 12px;
 }
 
+/* 2026-07-28 gap-killer (09:15 JST): when the card-page-header--bare
+   sits inside .card-kicker-badge-row, suppress its own margin-bottom
+   so the flex container's gap (16px) + the kicker's margin (0) define
+   the spacing rhythm without double-spacing. The hairline border-bottom
+   is preserved as the section break above the H1 row. */
+.card-kicker-badge-row .card-page-header--bare {
+  margin-bottom: 0;
+  padding-bottom: 12px;
+}
+
 /* When a card-page-header contains an h2.card-h2, tighten the h2's
    bottom margin so the next element (meta, nav, score panel) sits closer
    to the heading — matches the locked editorial-newspaper rhythm. */
 .card-page-header .card-h2 {
   margin-bottom: 8px;
+}
+
+/* ──────── passage-quote (revision digest reading passage — locked on /revision) ───────-
+   Japanese reading passage text inside a revision-article card-section.
+   design.md §What NOT to do locks "No italic headers" — passage text is
+   body copy, not a header, so normal weight is correct. Uses the same
+   .passage-text typography baseline (line-height 1.9, font-size 15px,
+   white-space pre-wrap, sans-serif) as .passage-text on /result/[date].
+   Locked tokens only (--font-sans, --text, --text-2). */
+
+.passage-quote {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text);
+  white-space: pre-wrap;
+  margin-bottom: 12px;
 }
 
 /* ──────── passage-text variants (locked: /result/[date] passage inside <details> toggle) ──────── */

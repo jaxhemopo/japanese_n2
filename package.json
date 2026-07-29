@@ -1,4 +1,10 @@
 {
+  "browserslist": [
+    "chrome >= 90",
+    "firefox >= 90",
+    "safari >= 14",
+    "edge >= 90"
+  ],
   "name": "japanese-n2",
   "version": "0.1.0",
   "private": true,

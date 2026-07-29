@@ -10,11 +10,13 @@
 
 import Link from 'next/link';
 import { createServerSupabase } from '@/lib/supabase';
+import { computeStreak } from '@/lib/streak';
 import { subtypeLabel } from '@/lib/subtype-labels';
 import { IssueMeta } from '@/components/IssueMeta';
 import { TiltedCard } from '@/components/TiltedCard';
 import { PullQuote } from '@/components/PullQuote';
 import { NavBar } from '@/components/NavBar';
+import { StreakBadge } from '@/components/StreakBadge';
 
 // 2026-07-28 gap-killer: format a window_start / window_end date (from
 // n2_revision_digests, stored as YYYY-MM-DD or full ISO) as "Jul 20 – Jul 26"
@@ -55,14 +57,26 @@ export default async function RevisionPage() {
     .limit(1)
     .maybeSingle();
 
+  // 2026-07-29 gap-killer: fetch streak for StreakBadge chrome parity
+  // with /progress and /result/[date]. /revision is public (no auth
+  // redirect) but StreakBadge should show for logged-in users — same
+  // pattern used on /result/[date] NoMockForDate / NoAttemptYet states.
+  const { data: sessionData } = await supabase.auth.getSession();
+  const streak = sessionData?.session?.user
+    ? await computeStreak(supabase, sessionData.session.user.id)
+    : 0;
+
   if (!digest) {
     return (
       <TiltedCard>
         <IssueMeta />
         <NavBar current="/revision" />
-        <h2 className="card-h2">
-          No revision digest yet
-        </h2>
+        <header className="card-page-header">
+          {streak > 0 && <StreakBadge count={streak} />}
+          <h2 className="card-h2">
+            No revision digest yet
+          </h2>
+        </header>
         <p className="card-lede">
           The revision digest hasn&rsquo;t been published yet — check back Wednesday or Sunday.
         </p>
@@ -125,7 +139,8 @@ export default async function RevisionPage() {
       <p className="card-section-kicker">
         Sunday &middot; Revision digest
       </p>
-      <div className="card-page-header">
+      <header className="card-page-header">
+        <StreakBadge count={streak} />
         <h2 className="card-h2">
           Today&rsquo;s revision
         </h2>
@@ -136,7 +151,7 @@ export default async function RevisionPage() {
         <div className="revision-meta">
           {questions.length} questions people got wrong most often, {formatWindow(digest.window_start)} – {formatWindow(digest.window_end)}
         </div>
-      </div>
+      </header>
 
       {/* 2026-07-23 gap-killer: card-section--flush wrapper around the
           article list. Each &lt;article className="card-section"&gt; carries

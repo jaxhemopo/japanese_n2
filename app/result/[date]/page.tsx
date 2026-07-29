@@ -279,7 +279,14 @@ function NoMockForDate({ date, streak }: { date: string; streak: number }) {
           should be consistent (NoAttemptYet already had it; NoMockForDate
           didn't). Streak prop is passed from the parent — no extra
           computeStreak call needed. */}
-      <header className="card-page-header">
+      {/* 2026-07-28 gap-killer: card-page-header--bare (not card-page-header)
+          — NoMockForDate's header wraps ONLY a StreakBadge with no H2
+          inside, so --bare is correct per the 2026-07-26 gap-killer
+          notes which define --bare as "for when the header wraps ONLY a
+          StreakBadge (no H2 inside)". Using the full card-page-header
+          would add 45px of dead space (margin-bottom 24 + padding-bottom 20 +
+          hairline) before the kicker, orphaning the badge. */}
+      <header className="card-page-header--bare">
         <StreakBadge count={streak} />
       </header>
       {/* 2026-07-27 gap-killer: card-section-kicker meta line above the
